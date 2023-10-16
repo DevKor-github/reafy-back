@@ -1,0 +1,13 @@
+import { Entity, PrimaryColumn, Column, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity('memo_hashtag')
+export class MemoHashtag {
+  @PrimaryGeneratedColumn({ name: 'memo_hashtag_id' })
+  memoHashtagId: number;
+
+  @Column({ name: 'hashtag_id' })
+  hashtagId: number;
+
+  @Column({ name: 'memo_id' })
+  memoId: number;
+}
