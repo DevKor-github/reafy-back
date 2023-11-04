@@ -6,8 +6,5 @@ export class Character {
   characterId: number;
 
   @Column()
-  name: string;
-
-  @Column({ name: 'content' })
   content: string;
 }

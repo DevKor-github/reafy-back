@@ -5,8 +5,8 @@ export class Memo {
   @PrimaryGeneratedColumn({ name: 'memo_id' })
   id: number;
 
-  @Column({ name: 'bookshelf_id' })
-  bookshelfId: number;
+  @Column({ name: 'bookshelf_book_id' })
+  bookshelfBookId: number;
 
   @Column()
   content: string;

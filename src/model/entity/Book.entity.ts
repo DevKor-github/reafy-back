@@ -12,8 +12,13 @@ export class Book {
   authors: string[];
 
   @Column()
+  translators: string[];
+
+  @Column()
   content: string; //책 설명
 
+  @Column()
+  publisher: string;
   /*
   anything else
   */
