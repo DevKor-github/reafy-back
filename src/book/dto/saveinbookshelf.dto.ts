@@ -6,4 +6,7 @@ export class SaveInBookshelfDto {
 
   @IsString()
   isbn13: string;
+
+  @IsString()
+  progressState: string;
 }

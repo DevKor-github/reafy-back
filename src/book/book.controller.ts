@@ -3,6 +3,7 @@ import { BookService } from './book.service';
 import { Controller } from '@nestjs/common';
 import { Book } from 'src/model/entity/Book.entity';
 import { Query, Body } from '@nestjs/common/decorators';
+import { SaveInBookshelfDto } from './dto/saveinbookshelf.dto';
 
 @Controller('book')
 export class BookController {
@@ -19,7 +20,12 @@ export class BookController {
   }
 
   @Post('/register')
-  registerBook(@Body('isbn13') isbn13: number) {
+  registerBook(@Body('isbn13') isbn13: string) {
     return this.bookService.registerBook(isbn13);
+  }
+
+  @Post('/bookshelf')
+  saveInBookshelf(@Body() userBookItems: SaveInBookshelfDto) {
+    return this.bookService.saveInBookshelf(userBookItems);
   }
 }

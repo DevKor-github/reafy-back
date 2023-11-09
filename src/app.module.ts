@@ -5,7 +5,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { BookModule } from './book/book.module';
-import { BookshelfModule } from './bookshelf/bookshelf.module';
 
 @Module({
   imports: [
@@ -23,7 +22,6 @@ import { BookshelfModule } from './bookshelf/bookshelf.module';
     }),
     UserModule,
     BookModule,
-    BookshelfModule,
   ],
   controllers: [AppController],
   providers: [AppService],
