@@ -9,16 +9,28 @@ export class Book {
   title: string;
 
   @Column()
-  authors: string[];
+  author: string; //MariaDB string[] 사용 불가 + 알라딘 api가 단일 string으로 제공
 
   @Column()
-  translators: string[];
+  translator: string;
 
   @Column()
   content: string; //책 설명
 
   @Column()
   publisher: string;
+
+  @Column()
+  pages: number;
+
+  @Column()
+  category: number;
+
+  @Column({ name: 'thumbnail_url' })
+  thumbnailURL: string;
+
+  @Column()
+  link: string;
   /*
   anything else
   */
