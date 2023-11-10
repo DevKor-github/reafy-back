@@ -29,7 +29,7 @@ export class BookController {
     return this.bookService.getBookshelfBook(userid);
   }
 
-  @Get('/bookshelf/:id/:bookid')
+  @Get('/bookshelf/:userid/:bookid')
   getBookshelfBookDetail(
     @Param('userid') userid: number,
     @Param('bookid') bookid: number,

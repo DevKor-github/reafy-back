@@ -82,13 +82,13 @@ export class BookService {
   }
 
   async getBookshelfBookDetail(userid: number, bookid: number) {
-    const bookshelfBookDetail = await this.bookshelfRepository.query(
+    return await this.bookshelfRepository.query(
       `
       SELECT *
       FROM bookshelf_book
-      LEFT JOIN 
-      LEFT JOIN
-      WHERE bookshelf_book.user_id = ${userid} AND bookshelf_book.book_id = ${bookid}
+      LEFT JOIN book ON book.book_id = bookshelf_book.book_id
+      LEFT JOIN user_book_history ON user_book_history.bookshelf_book_id = bookshelf_book.bookshelf_book_id
+      WHERE bookshelf_book.user_id = ${userid} AND bookshelf_book.book_id = ${bookid};
       `,
     );
   }
