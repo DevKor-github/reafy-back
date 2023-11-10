@@ -1,4 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('user_book_history')
 export class UserBookHistory {
@@ -8,15 +13,15 @@ export class UserBookHistory {
   @Column({ name: 'bookshelf_book_id' })
   bookshelfBookId: number;
 
-  @Column({ name: 'start_datetime' })
+  @CreateDateColumn({ name: 'start_datetime' })
   startDatetime: Date;
 
-  @Column({ name: 'end_datetime' })
+  @CreateDateColumn({ name: 'end_datetime' })
   endDatetime: Date; // js-joda https://jojoldu.tistory.com/600
 
-  @Column({ name: 'start_page' })
+  @Column({ name: 'start_page', default: 0 })
   startPage: number;
 
-  @Column({ name: 'end_page' })
+  @Column({ name: 'end_page', default: 0 })
   endPage: number;
 }
