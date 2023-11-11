@@ -1,4 +1,4 @@
-import { Get, Post } from '@nestjs/common';
+import { Get, Post, Req, Res } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Controller } from '@nestjs/common';
 import { Book } from 'src/model/entity/Book.entity';
@@ -14,15 +14,37 @@ export class BookController {
     return this.bookService.findAll();
   }
 
-  @Get('/search')
-  searchBook(@Query('query') query: string, @Query('index') index: number = 1) {
+  @Get('/search') // Return : 검색 결과 리스트(10개 단위)
+  async searchBook(
+    @Req() req,
+    @Query('query') query: string,
+    @Query('index') index: number = 1,
+    @Res() res,
+  ) {
     //dto화 필요
-    return this.bookService.searchBook(query, index);
+    try {
+      const result = this.bookService.searchBook(query, index);
+      res.json(result);
+    } catch (e) {
+      console.error(e);
+      res.status(e.status).json({ message: e.messaage });
+    }
+    return;
   }
 
-  @Post('/bookshelf')
-  saveInBookshelf(@Body() userBookItems: SaveInBookshelfDto) {
-    return this.bookService.saveInBookshelf(userBookItems);
+  @Post('/bookshelf') //Retur : 등록된 책의 상세 정보
+  async saveInBookshelf(
+    @Req() req,
+    @Body() userBookItems: SaveInBookshelfDto,
+    @Res() res,
+  ) {
+    try {
+      const result = this.bookService.saveInBookshelf(userBookItems);
+      res.json(result);
+    } catch (e) {
+      console.error(e);
+      res.status(e.status).json({ message: e.messaage });
+    }
   }
 
   /*
@@ -32,38 +54,79 @@ export class BookController {
   }
   */
 
-  @Get('/bookshelf/:userid')
-  getBookshelfBook(@Param('userid') userid: number) {
-    return this.bookService.getBookshelfBook(userid);
-  }
-
-  @Get('/bookshelf/:userid/:bookshelfbookid')
-  getBookshelfBookDetail(
+  @Get('/bookshelf/:userid') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
+  async getBookshelfBook(
+    @Req() req,
     @Param('userid') userid: number,
-    @Param('bookshelfbookid') bookshelfbookid: number,
+    @Res() res,
   ) {
-    return this.bookService.getBookshelfBookDetail(userid, bookshelfbookid); //Dto화 필요
+    try {
+      const result = this.bookService.getBookshelfBook(userid);
+      res.json(result);
+    } catch (e) {
+      console.error(e);
+      res.status(e.status).json({ message: e.messaage });
+    }
   }
 
-  @Put('/bookshelf/:userid/:bookshelfbookid')
-  updateBookshelfBook(
+  @Get('/bookshelf/:userid/:bookshelfbookid') //Return : 책의 상세 정보
+  async getBookshelfBookDetail(
+    @Req() req,
+    @Param('userid')
+    userid: number,
+    @Param('bookshelfbookid') bookshelfbookid: number,
+    @Res() res,
+  ) {
+    try {
+      const result = this.bookService.getBookshelfBookDetail(
+        userid,
+        bookshelfbookid,
+      );
+      res.json(result);
+    } catch (e) {
+      console.error(e);
+      res.status(e.status).json({ message: e.message });
+    }
+  }
+
+  @Put('/bookshelf/:userid/:bookshelfbookid') //Return : 변경된 책의 상세 정보
+  async updateBookshelfBook(
+    @Req() req,
     @Param('userid') userid: number,
     @Param('bookshelfbookid') bookshelfbookid: number,
     @Body('progressstate') progressstate: string,
+    @Res() res,
   ) {
-    return this.bookService.updateBookshelfBook(
-      userid,
-      bookshelfbookid,
-      progressstate,
-    ); //Dto화 필요
+    try {
+      const result = this.bookService.updateBookshelfBook(
+        userid,
+        bookshelfbookid,
+        progressstate,
+      );
+      res.json(result);
+    } catch (e) {
+      console.error(e);
+      res.status(e.status).json({ message: e.message });
+    } //Dto화 필요
   }
 
-  @Delete('/bookshelf/:userid/:bookshelfbookid')
-  deleteBookshelfBook(
+  @Delete('/bookshelf/:userid/:bookshelfbookid') //Return : 삭제된 책의 정보
+  async deleteBookshelfBook(
+    @Req() req,
     @Param('userid') userid: number,
     @Param('bookshelfbookid') bookshelfbookid: number,
+    @Res() res,
   ) {
-    return this.bookService.deleteBookshelfBook(userid, bookshelfbookid); //Dto화 필요
+    try {
+      const result = this.bookService.deleteBookshelfBook(
+        userid,
+        bookshelfbookid,
+      ); //Dto화 필요
+      res.json(result);
+    } catch (e) {
+      console.error(e);
+      res.status(e.status).json({ message: e.message });
+    }
   }
 }
 
