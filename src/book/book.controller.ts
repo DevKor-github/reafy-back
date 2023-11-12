@@ -23,8 +23,8 @@ export class BookController {
   ) {
     //dto화 필요
     try {
-      const result = this.bookService.searchBook(query, index);
-      res.json(result);
+      const result = await this.bookService.searchBook(query, index);
+      res.status(200).json(result);
     } catch (e) {
       console.error(e);
       res.status(e.status).json({ message: e.messaage });
@@ -39,8 +39,8 @@ export class BookController {
     @Res() res,
   ) {
     try {
-      const result = this.bookService.saveInBookshelf(userBookItems);
-      res.json(result);
+      const result = await this.bookService.saveInBookshelf(userBookItems);
+      res.status(201).json(result);
     } catch (e) {
       console.error(e);
       res.status(e.status).json({ message: e.messaage });
@@ -56,8 +56,8 @@ export class BookController {
     @Res() res,
   ) {
     try {
-      const result = this.bookService.getBookshelfBook(userid);
-      res.json(result);
+      const result = await this.bookService.getBookshelfBook(userid);
+      res.status(200).json(result);
     } catch (e) {
       console.error(e);
       res.status(e.status).json({ message: e.messaage });
@@ -73,11 +73,11 @@ export class BookController {
     @Res() res,
   ) {
     try {
-      const result = this.bookService.getBookshelfBookDetail(
+      const result = await this.bookService.getBookshelfBookDetail(
         userid,
         bookshelfbookid,
       );
-      res.json(result);
+      res.status(200).json(result);
     } catch (e) {
       console.error(e);
       res.status(e.status).json({ message: e.message });
@@ -93,12 +93,12 @@ export class BookController {
     @Res() res,
   ) {
     try {
-      const result = this.bookService.updateBookshelfBook(
+      const result = await this.bookService.updateBookshelfBook(
         userid,
         bookshelfbookid,
         progressstate,
       );
-      res.json(result);
+      res.status(200).json(result);
     } catch (e) {
       console.error(e);
       res.status(e.status).json({ message: e.message });
@@ -113,11 +113,11 @@ export class BookController {
     @Res() res,
   ) {
     try {
-      const result = this.bookService.deleteBookshelfBook(
+      const result = await this.bookService.deleteBookshelfBook(
         userid,
         bookshelfbookid,
       ); //Dto화 필요
-      res.json(result);
+      res.status(200).json(result);
     } catch (e) {
       console.error(e);
       res.status(e.status).json({ message: e.message });

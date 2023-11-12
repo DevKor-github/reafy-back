@@ -67,6 +67,19 @@ export class BookService {
     return await this.bookRepository.save(registeredBook);
   }
 
+  async getBookshelfBookDetail(userid: number, bookshelfbookid: number) {
+    //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
+    return await this.bookshelfRepository.query(
+      `
+      SELECT *
+      FROM bookshelf_book
+      LEFT JOIN book ON book.book_id = bookshelf_book.book_id
+      LEFT JOIN user_book_history ON user_book_history.bookshelf_book_id = bookshelf_book.bookshelf_book_id
+      WHERE bookshelf_book.user_id = ${userid} AND bookshelf_book.bookshelf_book_id = ${bookshelfbookid};
+      `,
+    );
+  }
+
   async saveInBookshelf(userBookItems: SaveInBookshelfDto) {
     //userId, isbn13, progressState 받아서 저장. return DTO & Swagger Needed. 201.
     const bookExist = await this.bookRepository.findOne({
@@ -92,7 +105,10 @@ export class BookService {
         bookshelfBookId: bookshelfInfo.bookshelfBookId,
       });
 
-      return bookshelfInfo;
+      return this.getBookshelfBookDetail(
+        bookshelfInfo.userId,
+        bookshelfInfo.bookshelfBookId,
+      );
     } else {
       //해당 책이 book DB에 존재하지 않을 경우
       const newBook = await this.registerBook(userBookItems.isbn13); //책을 book DB에 추가
@@ -108,7 +124,10 @@ export class BookService {
         bookshelfBookId: bookshelfInfo.bookshelfBookId,
       });
 
-      return bookshelfInfo; //리팩토링 필요
+      return this.getBookshelfBookDetail(
+        bookshelfInfo.userId,
+        bookshelfInfo.bookshelfBookId,
+      ); //리팩토링 필요 -> bookshelfBookDetail로 이동
     }
   }
 
@@ -125,39 +144,32 @@ export class BookService {
     return bookshelfBook;
   }
 
-  async getBookshelfBookDetail(userid: number, bookshelfbookid: number) {
-    //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
-    return await this.bookshelfRepository.query(
-      `
-      SELECT *
-      FROM bookshelf_book
-      LEFT JOIN book ON book.book_id = bookshelf_book.book_id
-      LEFT JOIN user_book_history ON user_book_history.bookshelf_book_id = bookshelf_book.bookshelf_book_id
-      WHERE bookshelf_book.user_id = ${userid} AND bookshelf_book.bookself_book_id = ${bookshelfbookid};
-      `,
-    );
-  }
-
+  //9788937462436
   async updateBookshelfBook(
     //유저 id, 책장 책, progress State 받아서 업데이트 후 업데이트 결과 object 전달. DTO(getBookshelfBookDetailDto) & Swagger needed. 200.
     userid: number,
     bookshelfbookid: number,
     progressstate: string,
   ) {
-    return await this.bookshelfRepository.update(
-      { bookshelfBookId: bookshelfbookid },
-      { progressState: progressstate },
-    );
+    const updatedBookshelfBook = await this.bookshelfRepository.findOne({
+      where: { userId: userid, bookshelfBookId: bookshelfbookid },
+    });
+    updatedBookshelfBook.progressState = progressstate;
+    return this.bookshelfRepository.save(updatedBookshelfBook);
   }
 
   async deleteBookshelfBook(userid: number, bookshelfbookid: number) {
     //유저 id, 책장 책 id를 받아 삭제 후 삭제된 데이터 object 전달. DTO(getBookshelDetailfBook) & Swagger needed. 200
+    const deletedBookshelfBook = await this.bookshelfRepository.findOne({
+      where: { userId: userid, bookshelfBookId: bookshelfbookid },
+    });
     await this.userBookHistoryRepository.delete({
       bookshelfBookId: bookshelfbookid,
     });
-    return await this.bookshelfRepository.delete({
+    await this.bookshelfRepository.delete({
       userId: userid,
       bookshelfBookId: bookshelfbookid,
     });
+    return deletedBookshelfBook;
   }
 }
