@@ -47,12 +47,7 @@ export class BookController {
     }
   }
 
-  /*
-  @Post('/register')
-  registerBook(@Body('isbn13') isbn13: string) {
-    return this.bookService.registerBook(isbn13);
-  }
-  */
+  //이하는 jwt 도입 시 jwtAutoGuard 적용. userid parameter 제거
 
   @Get('/bookshelf/:userid') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
   async getBookshelfBook(
@@ -129,5 +124,3 @@ export class BookController {
     }
   }
 }
-
-//jwt로 유저 id 가져올 수 있게 merge되면 추가 작업.. userid Param 빼버리고 req에서 user.id 받고, bookshelfbookid만 param으로 받아서 처리..

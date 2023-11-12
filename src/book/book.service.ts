@@ -26,6 +26,7 @@ export class BookService {
   }
 
   async searchBook(query: string, index: number): Promise<SearchBookDto[]> {
+    //query와 index에 맞는 DTO list 리턴. Swagger needed. 200.
     const result = await this.httpService
       .get(
         `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Version=20131101&start=${index}`,
@@ -45,7 +46,8 @@ export class BookService {
     return resultArray;
   }
 
-  async registerBook(isbn13: string): Promise<RegisterBookDto> {
+  async registerBook(isbn13: string) {
+    //내부 책 DB 등록용 API. 201.
     const result = await this.httpService
       .get(
         `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${process.env.ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${isbn13}&output=js&Version=20131101`,
@@ -65,10 +67,55 @@ export class BookService {
     return await this.bookRepository.save(registeredBook);
   }
 
+  async saveInBookshelf(userBookItems: SaveInBookshelfDto) {
+    //userId, isbn13, progressState 받아서 저장. return DTO & Swagger Needed. 201.
+    const bookExist = await this.bookRepository.findOne({
+      where: { isbn13: userBookItems.isbn13 }, //해당 책 isbn13으로 DB 내 검색
+    });
+
+    if (bookExist) {
+      //존재할 시, 해당 책이 bookshelf에 존재하는지 체크
+      const bookshelfBookExist = await this.bookRepository.findOne({
+        where: { bookId: bookExist.bookId },
+      });
+      if (bookshelfBookExist) return { message: '이미 존재하는 책입니다' }; //추후에 try-catch 에러처리.
+
+      const bookshelfInfo = await this.bookshelfRepository.save({
+        //bookshelf에 없는 책이면 bookshelf에 추가
+        userId: userBookItems.userId,
+        bookId: bookExist.bookId,
+        progressState: userBookItems.progressState,
+      });
+
+      await this.userBookHistoryRepository.save({
+        //userBookHistory 생성
+        bookshelfBookId: bookshelfInfo.bookshelfBookId,
+      });
+
+      return bookshelfInfo;
+    } else {
+      //해당 책이 book DB에 존재하지 않을 경우
+      const newBook = await this.registerBook(userBookItems.isbn13); //책을 book DB에 추가
+
+      const bookshelfInfo = await this.bookshelfRepository.save({
+        //bookshelf에 추가
+        userId: userBookItems.userId,
+        bookId: newBook.bookId,
+        progressState: userBookItems.progressState,
+      });
+
+      await this.userBookHistoryRepository.save({
+        bookshelfBookId: bookshelfInfo.bookshelfBookId,
+      });
+
+      return bookshelfInfo; //리팩토링 필요
+    }
+  }
+
   async getBookshelfBook(userid: number): Promise<BookshelfBookDto[]> {
-    //유저 id 받아서 책장의 책 id, 표지 전달, dto화 필요
+    //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200
     const bookshelfBook = await this.bookRepository.query(
-      `select user.user_id, book.book_id, book.thumbnail_url 
+      `select user.user_id, bookshelf_book.bookshelf_book_id, book.thumbnail_url 
       from user
       left join bookshelf_book on user.user_id = bookshelf_book.user_id 
       left join book on bookshelf_book.book_id = book.book_id
@@ -79,6 +126,7 @@ export class BookService {
   }
 
   async getBookshelfBookDetail(userid: number, bookshelfbookid: number) {
+    //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
     return await this.bookshelfRepository.query(
       `
       SELECT *
@@ -91,6 +139,7 @@ export class BookService {
   }
 
   async updateBookshelfBook(
+    //유저 id, 책장 책, progress State 받아서 업데이트 후 업데이트 결과 object 전달. DTO(getBookshelfBookDetailDto) & Swagger needed. 200.
     userid: number,
     bookshelfbookid: number,
     progressstate: string,
@@ -102,6 +151,7 @@ export class BookService {
   }
 
   async deleteBookshelfBook(userid: number, bookshelfbookid: number) {
+    //유저 id, 책장 책 id를 받아 삭제 후 삭제된 데이터 object 전달. DTO(getBookshelDetailfBook) & Swagger needed. 200
     await this.userBookHistoryRepository.delete({
       bookshelfBookId: bookshelfbookid,
     });
@@ -109,47 +159,5 @@ export class BookService {
       userId: userid,
       bookshelfBookId: bookshelfbookid,
     });
-  }
-
-  async saveInBookshelf(userBookItems: SaveInBookshelfDto) {
-    //책 상세 페이지 리턴..
-    const bookExist = await this.bookRepository.findOne({
-      where: { isbn13: userBookItems.isbn13 },
-    });
-
-    if (bookExist) {
-      const bookshelfBookExist = await this.bookRepository.findOne({
-        where: { bookId: bookExist.bookId },
-      });
-      if (bookshelfBookExist) return { message: '이미 존재하는 책입니다' }; //추후에 try-catch 에러처리.
-
-      const bookshelfInfo = await this.bookshelfRepository.save({
-        userId: userBookItems.userId,
-        bookId: bookExist.bookId,
-        progressState: userBookItems.progressState,
-      });
-
-      await this.userBookHistoryRepository.save({
-        bookshelfBookId: bookshelfInfo.bookshelfBookId,
-      });
-
-      return bookshelfInfo;
-    } else {
-      await this.registerBook(userBookItems.isbn13);
-      const newBook = await this.bookRepository.findOne({
-        where: { isbn13: userBookItems.isbn13 },
-      });
-      const bookshelfInfo = await this.bookshelfRepository.save({
-        userId: userBookItems.userId,
-        bookId: newBook.bookId,
-        progressState: userBookItems.progressState,
-      });
-
-      await this.userBookHistoryRepository.save({
-        bookshelfBookId: bookshelfInfo.bookshelfBookId,
-      });
-
-      return bookshelfInfo; //코드 중복 -불편-.. 추후에 리팩토링.
-    }
   }
 }
