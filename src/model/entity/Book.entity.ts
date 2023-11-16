@@ -1,24 +1,36 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('book')
 export class Book {
-  @PrimaryColumn({ name: 'book_id' })
-  bookId: string; //openAPI 상에서 불러온 그대로 저장
+  @PrimaryGeneratedColumn({ name: 'book_id' })
+  bookId: number;
+
+  @Column()
+  isbn13: string; //책 id
 
   @Column()
   title: string;
 
   @Column()
-  authors: string[];
-
-  @Column()
-  translators: string[];
+  author: string; //MariaDB string[] 사용 불가 + 알라딘 api가 단일 string으로 제공
 
   @Column()
   content: string; //책 설명
 
   @Column()
   publisher: string;
+
+  @Column()
+  pages: number;
+
+  @Column()
+  category: string;
+
+  @Column({ name: 'thumbnail_url' })
+  thumbnailURL: string;
+
+  @Column()
+  link: string;
   /*
   anything else
   */
