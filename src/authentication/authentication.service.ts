@@ -6,6 +6,8 @@ import { UserService } from 'src/user/user.service';
 import { HttpService } from '@nestjs/axios';
 import { ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE } from 'src/common/constant/authentication.constant';
 import { JwtSubjectType } from 'src/common/type/authentication.type';
+import { User } from 'src/model/entity/User.entity';
+import axios from 'axios';
 
 
 
@@ -29,6 +31,8 @@ export class AuthenticationService {
             }
         }
 
+        console.log(`oauthId : ${oauthId}`);
+
         // accessToken, refreshToken 발급
         const [accessToken, refreshToken] = await Promise.all([
             this.generateAccessToken(oauthId),
@@ -40,21 +44,38 @@ export class AuthenticationService {
             httpOnly: true,
         });
 
+        const user = await this.userService.findByOauthId(oauthId);
+        console.log(`user : ${user}`);
+
+        this.userService.updateUser({ ...user, refreshToken: refreshToken });
+
         return new TokenResponse({ accessToken });
     }
 
     async getUserOauthIdByKakaoAccessToken(accessToken: string): Promise<string> {
         // KAKAO LOGIN 회원조회 REST-API
-        const user: any = await this.httpService.get('https://kapi.kakao.com/v2/user/me',
-            {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
-        if (!user) throw new UnauthorizedException(); //카카오 로그인 실패 예외처리
+        // accessToken = "c2d65b0ac67c82a2b8a17595724c3859";
+        try {
+            const user: any = await axios.get('https://kapi.kakao.com/v2/user/me',
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    }
+                });
 
-        const oauthId = (await this.userService.findById(user.data.id)).oauthId;
-        if (oauthId) return oauthId;
+            if (!user) throw new UnauthorizedException(); //카카오 로그인 실패 예외처리
+            const kakaoId = user?.data?.id;
 
-        return (await this.userService.createUser({ userId: null, oauthId: user.data.id, vender: "kakao" })).oauthId; // 회원이 없으면 회원가입 후 아이디 반환
+            console.log(`kakaoId : ${kakaoId}`);
+
+            const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
+            console.log(`oauthId : ${oauthId}`);
+            if (oauthId) return oauthId;
+            return (await this.userService.createUser({ userId: null, oauthId: kakaoId, vender: "kakao", refreshToken: null })).oauthId; // 회원이 없으면 회원가입 후 아이디 반환
+
+        } catch (err) {
+            console.log(`error : ${err}`);
+        }
     }
 
     protected async generateAccessToken(oauthId: string): Promise<string> {
@@ -75,6 +96,28 @@ export class AuthenticationService {
                 subject: JwtSubjectType.REFRESH,
             },
         );
+    }
+
+    async tokenValidate(payload: any): Promise<User> {
+        console.log(payload);
+        return await this.userService.findByOauthId(payload.oauthId);
+    }
+
+    async refreshJWT(id: number, refreshToken: string) {
+        const user = await this.userService.findByOauthId(id.toString());
+        if (!user) throw new UnauthorizedException('존재하지 않는 유저입니다.');
+
+        if (user.refreshToken !== refreshToken)
+            throw new UnauthorizedException('invalid refresh token');
+
+        const accessToken = await this.generateAccessToken(user.oauthId);
+
+        //const newRefreshToken = await this.generateRefreshToken(user.oauthId);
+        // user.refreshToken = newRefreshToken;
+        // await this.userService.updateUser(user);
+        // return { accessToken, refreshToken: newRefreshToken };
+        
+        return { accessToken };
     }
 
 

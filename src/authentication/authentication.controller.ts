@@ -1,20 +1,23 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
 import { Get } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('authentication')
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) { }
 
-
-  @Get('test')
-  test(
+  @Post('accesstokenTest')
+  @UseGuards(AuthGuard('access'))
+  async accesstokenTest(
     @Body() data: LoginRequest,
     @Res({ passthrough: true }) res,
-  ) {
-    console.log("test api");
+    @Req() req
+  ){
+    console.log(req);
+    console.log(req?.user);
   }
 
   @Post('login')
@@ -23,6 +26,19 @@ export class AuthenticationController {
     @Res({ passthrough: true }) res,
   ): Promise<TokenResponse> {
     return this.authenticationService.login(data, res);
+  }
+
+  @Post('refresh')
+  @UseGuards(AuthGuard('refresh'))
+  async refresh(@Req() req: any) {
+    try {
+      return await this.authenticationService.refreshJWT(
+        req.user.id,
+        req.user.refreshToken,
+      );
+    } catch (err) {
+      return err;
+    }
   }
 
 }
