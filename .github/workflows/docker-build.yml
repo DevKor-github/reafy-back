@@ -2,7 +2,7 @@ name: docker-build
 
 on:
   push:
-    branches: ['main', 'feature/CICD']
+    branches: ['main']
 
 env:
   DOCKER_IMAGE: ghcr.io/steadfastree/reafy
