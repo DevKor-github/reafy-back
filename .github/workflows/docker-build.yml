@@ -41,10 +41,10 @@ jobs:
         run: |
           echo "DB_HOST=${{ secrets.DB_HOST}}" >> .env
           echo "DB_PORT=${{ secrets.DB_PORT}}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD}}" >> .env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME}}" >> .env
+          echo "DB_PASS=${{ secrets.DB_PASS}}" >> .env
+          echo "DB_USER=${{ secrets.DB_USER}}" >> .env
           echo "DB_DATABASE=${{ secrets.DB_DATABASE}}" >> .env
-          echo "DB_DATABASE=${{ secrets.ALADIN_API_KEY}}" >> .env
+          echo "ALADIN_API_KEY=${{ secrets.ALADIN_API_KEY}}" >> .env
 
           cat .env
       - name: Run Docker
