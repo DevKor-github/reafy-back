@@ -6,7 +6,7 @@ import { HttpService } from '@nestjs/axios/dist';
 import { SearchBookDto } from './dto/SearchBook.dto';
 import { RegisterBookDto } from './dto/RegisterBook.dto';
 import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
-import { SaveInBookshelfDto } from './dto/SaveInBookshelf.dto';
+import { SaveInBookshelfDto } from './dto/SaveInBookShelf.dto';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { BookshelfBookDto } from './dto/BookshelfBook.dto';
 

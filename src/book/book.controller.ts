@@ -3,7 +3,7 @@ import { BookService } from './book.service';
 import { Controller } from '@nestjs/common';
 import { Book } from 'src/model/entity/Book.entity';
 import { Query, Param, Body, Put, Delete } from '@nestjs/common/decorators';
-import { SaveInBookshelfDto } from './dto/SaveInBookshelf.dto';
+import { SaveInBookshelfDto } from './dto/SaveInBookShelf.dto';
 
 @Controller('book')
 export class BookController {
