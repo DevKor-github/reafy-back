@@ -3,13 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from 'src/model/entity/Book.entity';
 import { HttpService } from '@nestjs/axios/dist';
-import { SearchBookDto } from './dto/SearchBook.dto';
-import { RegisterBookDto } from './dto/RegisterBook.dto';
 import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
-import { SaveInBookshelfDto } from './dto/SaveInBookshelf.dto';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
-import { BookshelfBookDto } from './dto/BookshelfBook.dto';
-
+import { BookshelfBookDto } from 'src/book/dto/BookshelfBook.dto';
+import { SearchBookDto } from 'src/book/dto/SearchBook.dto';
+import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
+import { SaveInBookshelfDto } from 'src/book/dto/SaveInBookshelf.dto';
 @Injectable()
 export class BookService {
   constructor(
