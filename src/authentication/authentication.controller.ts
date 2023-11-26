@@ -16,8 +16,7 @@ export class AuthenticationController {
     @Res({ passthrough: true }) res,
     @Req() req
   ){
-    console.log(req);
-    console.log(req?.user);
+    return req?.user;
   }
 
   @Post('login')

@@ -11,22 +11,24 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, "access") {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: JWT_SECRET_KEY,
+            ignoreExpiration: true, // token verify는 서버에서 진행
 
         });
     }
 
     async validate(payload) {
-        console.log("this.validate", payload);
-        const user = await this.authenticationService.tokenValidate(payload);
-
-        console.log(`user : ${user}`);
-
-        if (!user) {
-            return new UnauthorizedException();
+        try{
+            const user = await this.authenticationService.tokenValidate(payload?.oauthId);
+            if (!user) {
+                return new UnauthorizedException();
+            }
+    
+            return {
+                oauthId: user.oauthId,
+            }
+        } catch(err){
+            console.log(`err : ${err}}`);
         }
-
-        return {
-            oauthId: user.oauthId,
-        }
+        
     }
 }

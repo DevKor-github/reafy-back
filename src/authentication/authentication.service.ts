@@ -31,8 +31,6 @@ export class AuthenticationService {
             }
         }
 
-        console.log(`oauthId : ${oauthId}`);
-
         // accessToken, refreshToken 발급
         const [accessToken, refreshToken] = await Promise.all([
             this.generateAccessToken(oauthId),
@@ -45,7 +43,6 @@ export class AuthenticationService {
         });
 
         const user = await this.userService.findByOauthId(oauthId);
-        console.log(`user : ${user}`);
 
         this.userService.updateUser({ ...user, refreshToken: refreshToken });
 
@@ -66,10 +63,8 @@ export class AuthenticationService {
             if (!user) throw new UnauthorizedException(); //카카오 로그인 실패 예외처리
             const kakaoId = user?.data?.id;
 
-            console.log(`kakaoId : ${kakaoId}`);
-
             const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
-            console.log(`oauthId : ${oauthId}`);
+
             if (oauthId) return oauthId;
             return (await this.userService.createUser({ userId: null, oauthId: kakaoId, vender: "kakao", refreshToken: null })).oauthId; // 회원이 없으면 회원가입 후 아이디 반환
 
@@ -98,9 +93,8 @@ export class AuthenticationService {
         );
     }
 
-    async tokenValidate(payload: any): Promise<User> {
-        console.log(payload);
-        return await this.userService.findByOauthId(payload.oauthId);
+    async tokenValidate(oauthId: string): Promise<User> {
+        return await this.userService.findByOauthId(oauthId);
     }
 
     async refreshJWT(id: number, refreshToken: string) {
