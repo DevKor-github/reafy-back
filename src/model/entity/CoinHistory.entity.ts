@@ -8,15 +8,15 @@ export class CoinHistory {
   @Column({ name: 'coin_id' })
   coinId: number;
 
-  @Column({ name: 'earn_amount' })
+  @Column({ name: 'earn_amount', default: 0 })
   earnAmount: number;
 
-  @Column({ name: 'spend_amount' })
+  @Column({ name: 'spend_amount', default: 0 }) //값 지정하지 않으면 default 0
   spendAmount: number;
 
-  @Column({ name: 'item_id' })
+  @Column({ name: 'item_id', nullable: true })
   itemId: number;
 
-  @Column({ name: 'reg_date' })
+  @Column({ name: 'reg_date' }) //이건 무슨 칼럼이더라? 생성일자?
   regDate: Date;
 }
