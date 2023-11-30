@@ -15,7 +15,7 @@ export class AuthenticationController {
     @Body() data: LoginRequest,
     @Res({ passthrough: true }) res,
     @Req() req
-  ){
+  ) {
     return req?.user;
   }
 
@@ -32,7 +32,7 @@ export class AuthenticationController {
   async refresh(@Req() req: any) {
     try {
       return await this.authenticationService.refreshJWT(
-        req.user.id,
+        req.user.oauthId,
         req.user.refreshToken,
       );
     } catch (err) {

@@ -11,7 +11,7 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, "access") {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: JWT_SECRET_KEY,
-            ignoreExpiration: true, // token verify는 서버에서 진행
+            ignoreExpiration: false, // token verify는 서버에서 진행
 
         });
     }

@@ -9,31 +9,23 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "refresh") {
 
     constructor(private readonly authenticationService: AuthenticationService) {
         super({
-            jwtFromRequest: ExtractJwt.fromExtractors([
-                (req) => {
-                    console.log(req);
-                    console.log(req?.cookies);
-                    console.log(req?.cookies['refreshToken']);
-                    return req?.cookies['refreshToken'];
-    
-                }
+            // cookie-parser로 cookie에 저장하는 방식
+            // jwtFromRequest: ExtractJwt.fromExtractors([
+            //     (req) => {        
+            //         return req?.cookies['refreshToken'];
+            //     }
+            // ]),
 
-            ]),
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: JWT_SECRET_KEY,
+            ignoreExpiration: false, // token verify는 서버에서 진행
+            passReqToCallback: true,
 
         });
     }
 
-    // validate(payload) {
-
-    //     return {
-    //         oauthId: payload?.oauthId,
-    //     }
-    // }
-
     async validate(req, payload) {
         const refreshToken = req.get('authorization').split('Bearer ')[1];
-
         return {
             ...payload,
             refreshToken,

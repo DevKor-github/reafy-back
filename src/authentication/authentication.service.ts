@@ -20,38 +20,42 @@ export class AuthenticationService {
     ) { }
 
     async login(data: LoginRequest, res): Promise<TokenResponse> {
-        let oauthId;
-        switch (data.vendor) {
-            case 'kakao': {
-                oauthId = await this.getUserOauthIdByKakaoAccessToken(data.accessToken);
-                break;
+        try{
+            let oauthId;
+            switch (data.vendor) {
+                case 'kakao': {
+                    oauthId = await this.getUserOauthIdByKakaoAccessToken(data.accessToken);
+                    break;
+                }
+                default: {
+                    throw new BadRequestException(); //소셜로그인 선택 실패 예외처리
+                }
             }
-            default: {
-                throw new BadRequestException(); //소셜로그인 선택 실패 예외처리
-            }
+    
+            // accessToken, refreshToken 발급
+            const [accessToken, refreshToken] = await Promise.all([
+                this.generateAccessToken(oauthId),
+                this.generateRefreshToken(oauthId),
+            ]);
+    
+            res.cookie('refresh_token', refreshToken, {
+                path: '/auth',
+                httpOnly: true,
+            });
+    
+            const user = await this.userService.findByOauthId(oauthId);
+    
+            this.userService.updateUser({ ...user, refreshToken: refreshToken });
+    
+            return new TokenResponse({ accessToken });
         }
-
-        // accessToken, refreshToken 발급
-        const [accessToken, refreshToken] = await Promise.all([
-            this.generateAccessToken(oauthId),
-            this.generateRefreshToken(oauthId),
-        ]);
-
-        res.cookie('refresh_token', refreshToken, {
-            path: '/auth',
-            httpOnly: true,
-        });
-
-        const user = await this.userService.findByOauthId(oauthId);
-
-        this.userService.updateUser({ ...user, refreshToken: refreshToken });
-
-        return new TokenResponse({ accessToken });
+        catch(err){
+            throw new BadRequestException;
+        }
     }
 
     async getUserOauthIdByKakaoAccessToken(accessToken: string): Promise<string> {
         // KAKAO LOGIN 회원조회 REST-API
-        // accessToken = "c2d65b0ac67c82a2b8a17595724c3859";
         try {
             const user: any = await axios.get('https://kapi.kakao.com/v2/user/me',
                 {
@@ -70,12 +74,14 @@ export class AuthenticationService {
 
         } catch (err) {
             console.log(`error : ${err}`);
+            throw new BadRequestException;
         }
     }
 
     protected async generateAccessToken(oauthId: string): Promise<string> {
+        const payload = { oauthId: oauthId };
         return this.jwtService.signAsync(
-            { oauthId },
+            payload,
             {
                 expiresIn: ACCESS_TOKEN_EXPIRE,
                 subject: JwtSubjectType.ACCESS,
@@ -84,8 +90,9 @@ export class AuthenticationService {
     }
 
     protected async generateRefreshToken(oauthId: string): Promise<string> {
+        const payload = { oauthId: oauthId };
         return this.jwtService.signAsync(
-            { oauthId },
+            payload,
             {
                 expiresIn: REFRESH_TOKEN_EXPIRE,
                 subject: JwtSubjectType.REFRESH,
@@ -97,7 +104,7 @@ export class AuthenticationService {
         return await this.userService.findByOauthId(oauthId);
     }
 
-    async refreshJWT(id: number, refreshToken: string) {
+    async refreshJWT(id: number, refreshToken: string): Promise<TokenResponse> {
         const user = await this.userService.findByOauthId(id.toString());
         if (!user) throw new UnauthorizedException('존재하지 않는 유저입니다.');
 
@@ -105,13 +112,7 @@ export class AuthenticationService {
             throw new UnauthorizedException('invalid refresh token');
 
         const accessToken = await this.generateAccessToken(user.oauthId);
-
-        //const newRefreshToken = await this.generateRefreshToken(user.oauthId);
-        // user.refreshToken = newRefreshToken;
-        // await this.userService.updateUser(user);
-        // return { accessToken, refreshToken: newRefreshToken };
-        
-        return { accessToken };
+        return new TokenResponse({ accessToken });
     }
 
 
