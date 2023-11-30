@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
-export class SaveInBookshelfDto {
+export class SaveInBookshelfReqDto {
   @IsNumber()
   userId: number;
 

@@ -27,4 +27,19 @@ export class RegisterBookDto {
 
   @IsString()
   link: string;
+
+  static async makeDto(data: any) {
+    const dtoData: RegisterBookDto = {
+      isbn13: data.isbn13,
+      title: data.title,
+      author: data.author,
+      content: data.description,
+      publisher: data.publisher,
+      pages: data.subInfo.itemPage,
+      category: data.categoryName,
+      thumbnailURL: data.cover,
+      link: data.link,
+    };
+    return dtoData;
+  }
 }

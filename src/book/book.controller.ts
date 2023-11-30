@@ -1,10 +1,11 @@
-import { Get, Post, Req, Res } from '@nestjs/common';
+import { Get, Post, Req, Res, HttpStatus } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Controller } from '@nestjs/common';
 import { Book } from 'src/model/entity/Book.entity';
 import { Query, Param, Body, Put, Delete } from '@nestjs/common/decorators';
-import { SaveInBookshelfDto } from 'src/book/dto/SaveInBookshelf.dto';
+import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
 
+@Apitags
 @Controller('book')
 export class BookController {
   constructor(private readonly bookService: BookService) {} //BookService  주입
@@ -18,109 +19,101 @@ export class BookController {
   async searchBook(
     @Req() req,
     @Query('query') query: string,
-    @Query('index') index: number = 1,
-    @Res() res,
+    @Query('page') page: number = 1,
   ) {
     //dto화 필요
     try {
-      const result = await this.bookService.searchBook(query, index);
-      res.status(200).json(result);
+      return {
+        status: 200,
+        response: await this.bookService.searchBook(query, page),
+      };
     } catch (e) {
-      console.error(e);
-      res.status(e.status).json({ message: e.messaage });
+      return { status: e.HttpStatus, message: e.message };
     }
-    return;
   }
 
   @Post('/bookshelf') //Retur : 등록된 책의 상세 정보
   async saveInBookshelf(
     @Req() req,
-    @Body() userBookItems: SaveInBookshelfDto,
-    @Res() res,
+    @Body() userBookItems: SaveInBookshelfReqDto,
   ) {
     try {
-      const result = await this.bookService.saveInBookshelf(userBookItems);
-      res.status(201).json(result);
+      return {
+        status: 201,
+        response: await this.bookService.saveInBookshelf(userBookItems),
+      };
     } catch (e) {
-      console.error(e);
-      res.status(e.status).json({ message: e.messaage });
+      return { status: e.HttpStatus, message: e.message };
     }
   }
 
   //이하는 jwt 도입 시 jwtAutoGuard 적용. userid parameter 제거
 
-  @Get('/bookshelf/:userid') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
-  async getBookshelfBook(
-    @Req() req,
-    @Param('userid') userid: number,
-    @Res() res,
-  ) {
+  @Get('/bookshelf') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
+  async getBookshelfBook(@Req() req) {
     try {
-      const result = await this.bookService.getBookshelfBook(userid);
-      res.status(200).json(result);
+      return {
+        status: 200,
+        response: await this.bookService.getBookshelfBook(1),
+      }; //요청 오브젝트에서 user Id 가져오기
     } catch (e) {
-      console.error(e);
-      res.status(e.status).json({ message: e.messaage });
+      return { status: e.HttpStatus, message: e.message };
     }
   }
 
-  @Get('/bookshelf/:userid/:bookshelfbookid') //Return : 책의 상세 정보
+  @Get('/bookshelf/:bookshelfbookId') //Return : 책의 상세 정보
   async getBookshelfBookDetail(
     @Req() req,
-    @Param('userid')
-    userid: number,
-    @Param('bookshelfbookid') bookshelfbookid: number,
-    @Res() res,
+    @Param('bookshelfbookId') bookshelfbookId: number,
   ) {
     try {
-      const result = await this.bookService.getBookshelfBookDetail(
-        userid,
-        bookshelfbookid,
-      );
-      res.status(200).json(result);
+      return {
+        status: 200,
+        response: await this.bookService.getBookshelfBookDetail(
+          1, //userId
+          bookshelfbookId,
+        ),
+      };
     } catch (e) {
-      console.error(e);
-      res.status(e.status).json({ message: e.message });
+      return { status: e.HttpStatus, message: e.message };
     }
   }
 
-  @Put('/bookshelf/:userid/:bookshelfbookid') //Return : 변경된 책의 상세 정보
+  @Put('/bookshelf/:bookshelfbookId') //Return : 변경된 책의 상세 정보
   async updateBookshelfBook(
     @Req() req,
-    @Param('userid') userid: number,
-    @Param('bookshelfbookid') bookshelfbookid: number,
-    @Body('progressstate') progressstate: string,
-    @Res() res,
+    @Param('bookshelfbookId') bookshelfbookId: number,
+    @Body('progressState') progressState: string,
   ) {
     try {
-      const result = await this.bookService.updateBookshelfBook(
-        userid,
-        bookshelfbookid,
-        progressstate,
-      );
-      res.status(200).json(result);
+      return {
+        status: 200,
+        response: await this.bookService.updateBookshelfBook(
+          1, //userId
+          bookshelfbookId,
+          progressState,
+        ),
+      };
     } catch (e) {
-      console.error(e);
-      res.status(e.status).json({ message: e.message });
+      return { status: e.HttpStatus, message: e.message };
     } //Dto화 필요
   }
 
-  @Delete('/bookshelf/:userid/:bookshelfbookid') //Return : 삭제된 책의 정보
+  @Delete('/bookshelf/:bookshelfbookId') //Return : 삭제된 책의 정보
   async deleteBookshelfBook(
     @Req() req,
-    @Param('userid') userid: number,
-    @Param('bookshelfbookid') bookshelfbookid: number,
-    @Res() res,
+    @Param('bookshelfbookId') bookshelfbookId: number,
   ) {
     try {
-      const result = await this.bookService.deleteBookshelfBook(
-        userid,
-        bookshelfbookid,
-      ); //Dto화 필요
-      res.status(200).json(result);
+      return {
+        status: 200,
+        response: await this.bookService.deleteBookshelfBook(
+          1, //userId
+          bookshelfbookId,
+        ),
+      }; //Dto화 필요
     } catch (e) {
-      console.error(e);
-      res.status(e.status).json({ message: e.message });
+      return { status: e.HttpStatus, message: e.message };
     }
   }
 }

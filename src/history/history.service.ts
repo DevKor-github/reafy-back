@@ -11,8 +11,9 @@ export class HistoryService {
   constructor(
     @InjectRepository(UserBookHistory)
     private readonly userBookHistoryRepository: Repository<UserBookHistory>,
+    @InjectRepository(CoinHistory)
     private readonly coinHistoryRepository: Repository<CoinHistory>,
-    private readonly coinRepository: Repository<Coin>,
+    @InjectRepository(Coin) private readonly coinRepository: Repository<Coin>,
   ) {}
 
   async createUserBookHistory(

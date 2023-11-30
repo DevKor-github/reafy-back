@@ -6,9 +6,12 @@ import { HttpService } from '@nestjs/axios/dist';
 import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { BookshelfBookDto } from 'src/book/dto/BookshelfBook.dto';
-import { SearchBookDto } from 'src/book/dto/SearchBook.dto';
+import { SearchBookResDto } from 'src/book/dto/SearchBookRes.dto';
 import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
-import { SaveInBookshelfDto } from 'src/book/dto/SaveInBookshelf.dto';
+import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
+import { Axios, AxiosResponse } from 'axios';
+import { Observable } from 'rxjs';
+
 @Injectable()
 export class BookService {
   constructor(
@@ -24,62 +27,45 @@ export class BookService {
     return this.bookRepository.find();
   }
 
-  async searchBook(query: string, index: number): Promise<SearchBookDto[]> {
-    //query와 index에 맞는 DTO list 리턴. Swagger needed. 200.
-    const result = await this.httpService
-      .get(
-        `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Version=20131101&start=${index}`,
-      )
-      .toPromise();
-    let resultArray: SearchBookDto[] = [];
+  async searchBook(query: string, page: number): Promise<SearchBookResDto[]> {
+    //query와 page에 맞는 DTO list 리턴. Swagger needed. 200.
+    const result = await this.httpService.axiosRef.get(
+      `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Version=20131101&start=${page}`,
+    );
+    let resultArray: SearchBookResDto[] = [];
     for (let i = 0; i < 10; i++) {
-      //음.. 구현이 별로 맘에 들지 않는다
-      const tempObj: SearchBookDto = {
-        isbn13: result.data.item[i].isbn13,
-        cover: result.data.item[i].cover,
-        title: result.data.item[i].title,
-        author: result.data.item[i].author,
-      };
-      resultArray.push(tempObj);
+      resultArray.push(await SearchBookResDto.makeRes(result.data.item[i]));
     }
     return resultArray;
   }
 
   async registerBook(isbn13: string) {
     //내부 책 DB 등록용 API. 201.
-    const result = await this.httpService
-      .get(
-        `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${process.env.ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${isbn13}&output=js&Version=20131101`,
-      )
-      .toPromise();
-    const registeredBook: RegisterBookDto = {
-      isbn13: result.data.item[0].isbn13,
-      title: result.data.item[0].title,
-      author: result.data.item[0].author,
-      content: result.data.item[0].description,
-      publisher: result.data.item[0].publisher,
-      pages: result.data.item[0].subInfo.itemPage,
-      category: result.data.item[0].categoryName,
-      thumbnailURL: result.data.item[0].cover,
-      link: result.data.item[0].link,
-    };
+    const result = await this.httpService.axiosRef.get(
+      `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${process.env.ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${isbn13}&output=js&Version=20131101`,
+    );
+    const registeredBook: RegisterBookDto = await RegisterBookDto.makeDto(
+      result.data.item[0],
+    );
     return await this.bookRepository.save(registeredBook);
   }
 
-  async getBookshelfBookDetail(userid: number, bookshelfbookid: number) {
+  async getBookshelfBookDetail(userId: number, bookshelfbookId: number) {
     //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
+    console.log(userId);
+    console.log(bookshelfbookId);
     return await this.bookshelfRepository.query(
       `
       SELECT *
       FROM bookshelf_book
       LEFT JOIN book ON book.book_id = bookshelf_book.book_id
       LEFT JOIN user_book_history ON user_book_history.bookshelf_book_id = bookshelf_book.bookshelf_book_id
-      WHERE bookshelf_book.user_id = ${userid} AND bookshelf_book.bookshelf_book_id = ${bookshelfbookid};
-      `,
+      WHERE bookshelf_book.user_id = ${userId} AND bookshelf_book.bookshelf_book_id = ${bookshelfbookId};
+      `, // 수정 필요. bookshelf_book과 book join하여 정보 구하고, history는 따로 bookshelf_book_id condition으로 start, end page 각각 가져와서 page 수로 계산한 정보. 쿼리 너무 비직관적.
     );
   }
 
-  async saveInBookshelf(userBookItems: SaveInBookshelfDto) {
+  async saveInBookshelf(userBookItems: SaveInBookshelfReqDto) {
     //userId, isbn13, progressState 받아서 저장. return DTO & Swagger Needed. 201.
     const bookExist = await this.bookRepository.findOne({
       where: { isbn13: userBookItems.isbn13 }, //해당 책 isbn13으로 DB 내 검색
