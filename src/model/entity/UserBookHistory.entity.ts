@@ -24,4 +24,10 @@ export class UserBookHistory {
 
   @Column({ name: 'end_page', default: 0 })
   endPage: number;
+
+  @Column() //기록되는 독서 시간
+  duration: number;
+
+  @Column({ name: 'coin_history_id' }) //해당 독서로 얻은 코인 습득 정보
+  coinHistoryId: number;
 }
