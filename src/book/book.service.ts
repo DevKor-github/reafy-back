@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from 'src/model/entity/Book.entity';
@@ -11,6 +11,7 @@ import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
 import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
 import { Axios, AxiosResponse } from 'axios';
 import { Observable } from 'rxjs';
+import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
 
 @Injectable()
 export class BookService {
@@ -54,14 +55,35 @@ export class BookService {
     //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
     console.log(userId);
     console.log(bookshelfbookId);
-    return await this.bookshelfRepository.query(
+    const resultObject = await this.bookshelfRepository.query(
       `
       SELECT *
       FROM bookshelf_book
       LEFT JOIN book ON book.book_id = bookshelf_book.book_id
-      LEFT JOIN user_book_history ON user_book_history.bookshelf_book_id = bookshelf_book.bookshelf_book_id
       WHERE bookshelf_book.user_id = ${userId} AND bookshelf_book.bookshelf_book_id = ${bookshelfbookId};
-      `, // 수정 필요. bookshelf_book과 book join하여 정보 구하고, history는 따로 bookshelf_book_id condition으로 start, end page 각각 가져와서 page 수로 계산한 정보. 쿼리 너무 비직관적.
+      `,
+    );
+
+    const firstPage = await this.userBookHistoryRepository.findOne({
+      where: { bookshelfBookId: bookshelfbookId },
+      order: { startPage: 'ASC' },
+    });
+    const lastPage = await this.userBookHistoryRepository.findOne({
+      where: { bookshelfBookId: bookshelfbookId },
+      order: { endPage: 'DESC' },
+    });
+
+    /*console.log(resultObject[0]);
+    console.log(firstPage);
+    console.log(lastPage);*/
+
+    const startPage = firstPage ? firstPage.startPage : 0;
+    const endPage = lastPage ? lastPage.endPage : 0;
+
+    return await BookshelfBookDetailDto.makeRes(
+      resultObject[0],
+      startPage,
+      endPage,
     );
   }
 
@@ -76,7 +98,8 @@ export class BookService {
       const bookshelfBookExist = await this.bookRepository.findOne({
         where: { bookId: bookExist.bookId },
       });
-      if (bookshelfBookExist) return { message: '이미 존재하는 책입니다' }; //추후에 try-catch 에러처리.
+      if (bookshelfBookExist)
+        throw new HttpException('이미 존재하는 책입니다', HttpStatus.CONFLICT);
 
       const bookshelfInfo = await this.bookshelfRepository.save({
         //bookshelf에 없는 책이면 bookshelf에 추가
@@ -117,6 +140,7 @@ export class BookService {
   }
 
   async getBookshelfBook(userid: number): Promise<BookshelfBookDto[]> {
+    //상태를 index화 시켜서(0,1,2) param에 따라 그에 맞는 bookshelfbook 리턴
     //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200
     const bookshelfBook = await this.bookRepository.query(
       `select user.user_id, bookshelf_book.bookshelf_book_id, book.thumbnail_url 
