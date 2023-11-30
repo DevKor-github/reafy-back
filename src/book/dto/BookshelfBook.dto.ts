@@ -5,8 +5,19 @@ export class BookshelfBookDto {
   userId: number;
 
   @IsNumber()
-  bookId: number;
+  bookshelfBookId: number;
+
+  @IsString()
+  title: string;
 
   @IsString()
   thumbnailURL: string;
+
+  @IsNumber()
+  progressState: number;
+
+  static async makeRes(data) {
+    const resData: BookshelfBookDto = { ...data };
+    return resData;
+  }
 }

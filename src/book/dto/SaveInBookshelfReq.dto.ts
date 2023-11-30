@@ -8,5 +8,5 @@ export class SaveInBookshelfReqDto {
   isbn13: string;
 
   @IsString()
-  progressState: string;
+  progressState: number;
 }

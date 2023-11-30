@@ -63,11 +63,10 @@ export class BookController {
   }
 
   //이하는 jwt 도입 시 jwtAutoGuard 적용. userid parameter 제거
-
   @ApiOperation({
     summary: '책장 조회하기',
     description:
-      '책장을 조회합니다. progessState별로, bookshelfId, bookId, title, thumbnaulURL이 담겨 있는 리스트를 반환합니다.',
+      '책장을 조회합니다. bookshelfId, bookId, title, thumbnaulURL, progressState가 담겨 있는 리스트를 반환합니다.',
   })
   @Get('/bookshelf') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
   async getBookshelfBook(@Req() req) {
@@ -75,6 +74,29 @@ export class BookController {
       return {
         status: 200,
         response: await this.bookService.getBookshelfBook(1),
+      }; //요청 오브젝트에서 user Id 가져오기
+    } catch (e) {
+      return { status: e.HttpStatus, message: e.message };
+    }
+  }
+
+  @ApiOperation({
+    summary: '상태별 책장 조회하기',
+    description:
+      '상태별로 책장을 조회합니다. Query로 progressState를 받아서, bookshelfId, bookId, title, thumbnaulURL, progressState가 담겨 있는 리스트를 반환합니다.',
+  })
+  @Get('/bookshelf') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
+  async getBookshelfBookOnState(
+    @Req() req,
+    @Query('progressState') progressState: number,
+  ) {
+    try {
+      return {
+        status: 200,
+        response: await this.bookService.getBookshelfBookOnState(
+          1,
+          progressState,
+        ),
       }; //요청 오브젝트에서 user Id 가져오기
     } catch (e) {
       return { status: e.HttpStatus, message: e.message };
@@ -113,7 +135,7 @@ export class BookController {
   async updateBookshelfBook(
     @Req() req,
     @Param('bookshelfbookId') bookshelfbookId: number,
-    @Body('progressState') progressState: string,
+    @Body('progressState') progressState: number,
   ) {
     try {
       return {
@@ -126,7 +148,7 @@ export class BookController {
       };
     } catch (e) {
       return { status: e.HttpStatus, message: e.message };
-    } //Dto화 필요
+    }
   }
 
   @ApiOperation({
@@ -146,7 +168,7 @@ export class BookController {
           1, //userId
           bookshelfbookId,
         ),
-      }; //Dto화 필요
+      };
     } catch (e) {
       return { status: e.HttpStatus, message: e.message };
     }

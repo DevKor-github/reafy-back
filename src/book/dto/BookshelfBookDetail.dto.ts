@@ -1,7 +1,7 @@
 export class BookshelfBookDetailDto {
   bookshelfbookId: number;
   userId: number;
-  progressState: string;
+  progressState: number;
   bookId: number;
   title: string;
   author: string;

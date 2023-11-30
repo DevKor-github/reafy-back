@@ -9,8 +9,6 @@ import { BookshelfBookDto } from 'src/book/dto/BookshelfBook.dto';
 import { SearchBookResDto } from 'src/book/dto/SearchBookRes.dto';
 import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
 import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
-import { Axios, AxiosResponse } from 'axios';
-import { Observable } from 'rxjs';
 import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
 
 @Injectable()
@@ -55,7 +53,7 @@ export class BookService {
     //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
     console.log(userId);
     console.log(bookshelfbookId);
-    const resultObject = await this.bookshelfRepository.query(
+    const resultArray = await this.bookshelfRepository.query(
       `
       SELECT *
       FROM bookshelf_book
@@ -73,7 +71,7 @@ export class BookService {
       order: { endPage: 'DESC' },
     });
 
-    /*console.log(resultObject[0]);
+    /*console.log(resultArray[0]);
     console.log(firstPage);
     console.log(lastPage);*/
 
@@ -81,7 +79,7 @@ export class BookService {
     const endPage = lastPage ? lastPage.endPage : 0;
 
     return await BookshelfBookDetailDto.makeRes(
-      resultObject[0],
+      resultArray[0],
       startPage,
       endPage,
     );
@@ -138,19 +136,43 @@ export class BookService {
       ); //리팩토링 필요 -> bookshelfBookDetail로 이동
     }
   }
-
   async getBookshelfBook(userid: number): Promise<BookshelfBookDto[]> {
-    //상태를 index화 시켜서(0,1,2) param에 따라 그에 맞는 bookshelfbook 리턴
-    //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200
-    const bookshelfBook = await this.bookRepository.query(
-      `select user.user_id, bookshelf_book.bookshelf_book_id, book.thumbnail_url 
+    //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200. 책장책 id, 제목, 표지 url을 전달.
+    const resultArray = await this.bookRepository.query(
+      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title, book.thumbnail_url, bookshelf_book.progress_state 
       from user
       left join bookshelf_book on user.user_id = bookshelf_book.user_id 
       left join book on bookshelf_book.book_id = book.book_id
-      where user.user_id = ${userid};`,
+      where user.user_id = ${userid} ;`,
     );
 
-    return bookshelfBook;
+    const bookshelfBookList: BookshelfBookDto[] = await resultArray.map(
+      (book) => {
+        return BookshelfBookDto.makeRes(book);
+      },
+    );
+    return bookshelfBookList;
+  }
+
+  async getBookshelfBookOnState(
+    userid: number,
+    progressState: number,
+  ): Promise<BookshelfBookDto[]> {
+    //상태를 index화 시켜서(0,1,2) param에 따라 그에 맞는 bookshelfbook 리턴
+    //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200. 책장책 id, 제목, 표지 url을 전달.
+    const resultArray = await this.bookRepository.query(
+      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title, book.thumbnail_url, bookshelf_book.progress_state 
+      from user
+      left join bookshelf_book on user.user_id = bookshelf_book.user_id 
+      left join book on bookshelf_book.book_id = book.book_id
+      where user.user_id = ${userid} and bookshelf_book.progress_state =${progressState};`,
+    );
+    const bookshelfBookListOnState: BookshelfBookDto[] = await resultArray.map(
+      (book) => {
+        return BookshelfBookDto.makeRes(book);
+      },
+    );
+    return bookshelfBookListOnState;
   }
 
   //9788937462436
@@ -158,12 +180,12 @@ export class BookService {
     //유저 id, 책장 책, progress State 받아서 업데이트 후 업데이트 결과 object 전달. DTO(getBookshelfBookDetailDto) & Swagger needed. 200.
     userid: number,
     bookshelfbookid: number,
-    progressstate: string,
+    progressState: number,
   ) {
-    const updatedBookshelfBook = await this.bookshelfRepository.findOne({
-      where: { userId: userid, bookshelfBookId: bookshelfbookid },
+    const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
+      where: { userId: userid, bookshelfBookId: bookshelfbookid }, //실패하면 error throw
     });
-    updatedBookshelfBook.progressState = progressstate;
+    updatedBookshelfBook.progressState = progressState;
     return this.bookshelfRepository.save(updatedBookshelfBook);
   }
 
