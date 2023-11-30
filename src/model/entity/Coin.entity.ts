@@ -8,6 +8,6 @@ export class Coin {
   @Column({ name: 'user_id' })
   userId: number;
 
-  @Column({ name: 'total_coin' })
+  @Column({ name: 'total_coin', default: 0 })
   totalCoin: number;
 }

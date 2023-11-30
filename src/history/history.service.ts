@@ -11,14 +11,22 @@ export class HistoryService {
   constructor(
     @InjectRepository(UserBookHistory)
     private readonly userBookHistoryRepository: Repository<UserBookHistory>,
+    @InjectRepository(CoinHistory)
     private readonly coinHistoryRepository: Repository<CoinHistory>,
-    private readonly coinRepository: Repository<Coin>,
+    @InjectRepository(Coin) private readonly coinRepository: Repository<Coin>,
   ) {}
 
+  async getUserBookHistory(userId: number) {
+    const userBookHistoryList = await this.userBookHistoryRepository.find({
+      where: { userId: userId },
+    });
+    return userBookHistoryList;
+  }
   async createUserBookHistory(
     userId: number,
     createUserBookHistoryDto: CreateUserBookHistoryDto,
   ) {
+    console.log(CreateUserBookHistoryDto);
     const coinHistoryId = (
       await this.createCoinHistory(userId, createUserBookHistoryDto)
     ).coinHistoryId;
