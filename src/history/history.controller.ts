@@ -1,8 +1,13 @@
-import { Controller, Post, Body, Req, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, HttpStatus } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { Request } from 'express';
-import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 
 @ApiTags('History')
@@ -10,6 +15,25 @@ import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 
+  @ApiOperation({
+    summary: '독서 기록 조회',
+    description: '현재 유저의 전체 독서 기록을 조회합니다.',
+  })
+  @ApiOkResponse({
+    description: '현재 유저의 독서 기록 목록',
+    type: UserBookHistory,
+  })
+  @Get('/bookshelfbook')
+  async getBookshelfBookHistory(@Req() req: Request) {
+    try {
+      return {
+        status: 200,
+        response: await this.historyService.getUserBookHistory(1),
+      };
+    } catch (e) {
+      return { status: e.HttpStatus, message: e.message };
+    }
+  }
   //책 히스토리 만들기 = 독서 기록 만들기
   @ApiOperation({
     summary: '독서 기록',

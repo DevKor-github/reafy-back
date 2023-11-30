@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('coin_history')
 export class CoinHistory {
@@ -17,6 +22,6 @@ export class CoinHistory {
   @Column({ name: 'item_id', nullable: true })
   itemId: number;
 
-  @Column({ name: 'reg_date' }) //이건 무슨 칼럼이더라? 생성일자?
+  @CreateDateColumn({ name: 'reg_date' }) //이건 무슨 칼럼이더라? 생성일자?
   regDate: Date;
 }

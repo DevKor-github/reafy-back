@@ -72,7 +72,8 @@ export class BookController {
   }
 
   //이하는 jwt 도입 시 jwtAutoGuard 적용. userid parameter 제거
-  @ApiOperation({
+  //중복이라 일단 주석처리.
+  /*@ApiOperation({
     summary: '책장 조회하기',
     description:
       '책장을 조회합니다. bookshelfId, bookId, title, thumbnaulURL, progressState가 담겨 있는 리스트를 반환합니다.',
@@ -91,7 +92,7 @@ export class BookController {
     } catch (e) {
       return { status: e.HttpStatus, message: e.message };
     }
-  }
+  }*/
 
   @ApiOperation({
     summary: '상태별 책장 조회하기; 전 = 0, 중 = 1, 후 = 2',
@@ -112,7 +113,7 @@ export class BookController {
         status: 200,
         response: await this.bookService.getBookshelfBookOnState(
           1,
-          progressState,
+          Number(progressState),
         ),
       }; //요청 오브젝트에서 user Id 가져오기
     } catch (e) {

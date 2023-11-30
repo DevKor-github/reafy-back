@@ -16,10 +16,17 @@ export class HistoryService {
     @InjectRepository(Coin) private readonly coinRepository: Repository<Coin>,
   ) {}
 
+  async getUserBookHistory(userId: number) {
+    const userBookHistoryList = await this.userBookHistoryRepository.find({
+      where: { userId: userId },
+    });
+    return userBookHistoryList;
+  }
   async createUserBookHistory(
     userId: number,
     createUserBookHistoryDto: CreateUserBookHistoryDto,
   ) {
+    console.log(CreateUserBookHistoryDto);
     const coinHistoryId = (
       await this.createCoinHistory(userId, createUserBookHistoryDto)
     ).coinHistoryId;

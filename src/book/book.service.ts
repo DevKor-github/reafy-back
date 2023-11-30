@@ -59,10 +59,10 @@ export class BookService {
       where user.user_id = ${userId} ;`,
     );
 
-    const bookshelfBookList: BookshelfBookDto[] = await resultArray.map(
-      (book) => {
+    const bookshelfBookList: BookshelfBookDto[] = await Promise.all(
+      resultArray.map((book) => {
         return BookshelfBookDto.makeRes(book);
-      },
+      }),
     );
     return bookshelfBookList;
   }
@@ -80,11 +80,12 @@ export class BookService {
       left join book on bookshelf_book.book_id = book.book_id
       where user.user_id = ${userId} and bookshelf_book.progress_state =${progressState};`,
     );
-    const bookshelfBookListOnState: BookshelfBookDto[] = await resultArray.map(
-      (book) => {
+    const bookshelfBookListOnState: BookshelfBookDto[] = await Promise.all(
+      resultArray.map((book) => {
         return BookshelfBookDto.makeRes(book);
-      },
+      }),
     );
+
     return bookshelfBookListOnState;
   }
 
@@ -145,10 +146,10 @@ export class BookService {
         progressState: userBookItems.progressState,
       });
 
-      await this.userBookHistoryRepository.save({
+      /*await this.userBookHistoryRepository.save({
         //userBookHistory 생성
         bookshelfBookId: bookshelfInfo.bookshelfBookId,
-      });
+      }); userBookHistory는 독서 기록과 관련된 기록.*/
 
       return await this.getBookshelfBookDetail(
         bookshelfInfo.userId,
@@ -165,9 +166,9 @@ export class BookService {
         progressState: userBookItems.progressState,
       });
 
-      await this.userBookHistoryRepository.save({
+      /*await this.userBookHistoryRepository.save({
         bookshelfBookId: bookshelfInfo.bookshelfBookId,
-      });
+      });*/
 
       return await this.getBookshelfBookDetail(
         bookshelfInfo.userId,
@@ -197,10 +198,10 @@ export class BookService {
       userId,
       bookshelfbookId,
     );
-    await this.userBookHistoryRepository.delete({
+    /*await this.userBookHistoryRepository.delete({
       // 나중에 softRemove로 변경.. relation 아니라 cascade 설정 못함.
       bookshelfBookId: bookshelfbookId,
-    });
+    });*/
     await this.bookshelfRepository.delete({
       // 마찬가지.
       userId: userId,

@@ -12,6 +12,10 @@ export class UserBookHistory {
   @PrimaryGeneratedColumn({ name: 'user_book_history_id' })
   userBookHistoryId: number;
 
+  @ApiProperty({ description: 'user_id' })
+  @Column({ name: 'user_id' })
+  userId: number;
+
   @ApiProperty({ description: 'bookshelf_book_id' })
   @Column({ name: 'bookshelf_book_id' })
   bookshelfBookId: number;
