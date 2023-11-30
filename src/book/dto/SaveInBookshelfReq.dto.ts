@@ -7,6 +7,6 @@ export class SaveInBookshelfReqDto {
   isbn13: string;
 
   @ApiProperty({ description: '책 상태' })
-  @IsString()
+  @IsNumber()
   progressState: number;
 }
