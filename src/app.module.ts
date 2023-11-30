@@ -9,7 +9,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ envFilePath: ['.env'] }),
+    ConfigModule.forRoot({ envFilePath: ['.env'], isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,

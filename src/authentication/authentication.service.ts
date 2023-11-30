@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -50,7 +50,8 @@ export class AuthenticationService {
             return new TokenResponse({ accessToken });
         }
         catch(err){
-            throw new BadRequestException;
+            console.log(err);
+            throw new InternalServerErrorException;
         }
     }
 
@@ -74,7 +75,7 @@ export class AuthenticationService {
 
         } catch (err) {
             console.log(`error : ${err}`);
-            throw new BadRequestException;
+            throw new InternalServerErrorException;
         }
     }
 
