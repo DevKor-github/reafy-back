@@ -5,11 +5,12 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { BookModule } from './book/book.module';
+import { AuthenticationModule } from './authentication/authentication.module';
 import { HistoryModule } from './history/history.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ envFilePath: ['.env'] }),
+    ConfigModule.forRoot({ envFilePath: ['.env'], isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,
@@ -23,9 +24,10 @@ import { HistoryModule } from './history/history.module';
     }),
     UserModule,
     BookModule,
+    AuthenticationModule,
     HistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
