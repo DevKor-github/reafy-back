@@ -6,6 +6,7 @@ import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
 import { Coin } from 'src/model/entity/Coin.entity';
 import { CoinHistory } from 'src/model/entity/CoinHistory.entity';
+import { AuthenticationModule } from 'src/authentication/authentication.module';
 
 @Module({
   controllers: [HistoryController],
@@ -17,6 +18,7 @@ import { CoinHistory } from 'src/model/entity/CoinHistory.entity';
       Coin,
       CoinHistory,
     ]),
+    AuthenticationModule,
   ],
 })
 export class HistoryModule {}

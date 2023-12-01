@@ -25,6 +25,7 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'access') {
 
       return {
         oauthId: user.oauthId,
+        userId: user.userId,
       };
     } catch (err) {
       console.log(`err : ${err}}`);

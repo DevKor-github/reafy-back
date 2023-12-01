@@ -2,7 +2,14 @@ import { Get, Post, Req, Res, HttpStatus } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Controller } from '@nestjs/common';
 import { Book } from 'src/model/entity/Book.entity';
-import { Query, Param, Body, Put, Delete } from '@nestjs/common/decorators';
+import {
+  Query,
+  Param,
+  Body,
+  Put,
+  Delete,
+  UseGuards,
+} from '@nestjs/common/decorators';
 import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
 import {
   ApiBadRequestResponse,
@@ -14,10 +21,13 @@ import {
 import { SearchBookResDto } from './dto/SearchBookRes.dto';
 import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
 import { BookshelfBookDto } from './dto/BookshelfBook.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
 
 @ApiTags('BookService')
 @ApiBadRequestResponse({ description: 'Bad Request' })
 @Controller('book')
+@UseGuards(AuthGuard('access'))
 export class BookController {
   constructor(private readonly bookService: BookService) {} //BookService  주입
 
@@ -55,14 +65,14 @@ export class BookController {
   })
   @Post('/bookshelf') //Retur : 등록된 책의 상세 정보
   async saveInBookshelf(
-    @Req() req,
+    @Req() req: Request,
     @Body() saveInBookshelfReqDto: SaveInBookshelfReqDto,
   ) {
     try {
       return {
         status: 201,
         response: await this.bookService.saveInBookshelf(
-          1,
+          req.user.userId,
           saveInBookshelfReqDto,
         ), // userId = 1
       };
@@ -112,7 +122,7 @@ export class BookController {
       return {
         status: 200,
         response: await this.bookService.getBookshelfBookOnState(
-          1,
+          req.user.userId,
           Number(progressState),
         ),
       }; //요청 오브젝트에서 user Id 가져오기
@@ -139,7 +149,7 @@ export class BookController {
       return {
         status: 200,
         response: await this.bookService.getBookshelfBookDetail(
-          1, //userId
+          req.user.userId, //userId
           bookshelfbookId,
         ),
       };
@@ -167,7 +177,7 @@ export class BookController {
       return {
         status: 200,
         response: await this.bookService.updateBookshelfBook(
-          1, //userId
+          req.user.userId, //userId
           bookshelfbookId,
           progressState,
         ),
@@ -195,7 +205,7 @@ export class BookController {
       return {
         status: 200,
         response: await this.bookService.deleteBookshelfBook(
-          1, //userId
+          req.user.userId, //userId
           bookshelfbookId,
         ),
       };
