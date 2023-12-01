@@ -11,6 +11,16 @@ async function bootstrap() {
     .setTitle('Reafy API')
     .setDescription('Reafy API specification')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        name: 'JWT',
+        description: 'Jwt token',
+        in: 'header',
+      },
+      'accessToken',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

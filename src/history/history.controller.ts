@@ -11,6 +11,7 @@ import { HistoryService } from './history.service';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { Request } from 'express';
 import {
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -21,6 +22,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('History')
 @Controller('history')
+@ApiBearerAuth('accessToken')
 @UseGuards(AuthGuard('access'))
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
