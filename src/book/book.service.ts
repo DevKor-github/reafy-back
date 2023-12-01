@@ -20,7 +20,7 @@ export class BookService {
     @InjectRepository(UserBookHistory)
     private readonly userBookHistoryRepository: Repository<UserBookHistory>,
     private readonly httpService: HttpService,
-  ) {} //Book repository inject
+  ) {} //Book repository inject.
 
   findAll(): Promise<Book[]> {
     return this.bookRepository.find();
