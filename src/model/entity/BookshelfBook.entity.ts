@@ -12,5 +12,5 @@ export class BookshelfBook {
   bookId: number; //book의 id(논리적 fk)
 
   @Column({ name: 'progress_state' })
-  progressState: string; //책의 진행도(읽기 전, 읽는 중, 읽음)
+  progressState: number; //책의 진행도를 index로 표현 (읽기 전 = 0, 읽는 중 = 1, 읽음 = 2)
 }
