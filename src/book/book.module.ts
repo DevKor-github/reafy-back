@@ -1,3 +1,4 @@
+import { AuthenticationModule } from './../authentication/authentication.module';
 import { Module } from '@nestjs/common';
 import { BookController } from './book.controller';
 import { BookService } from './book.service';
@@ -13,6 +14,7 @@ import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
   imports: [
     TypeOrmModule.forFeature([Book, BookshelfBook, UserBookHistory]),
     HttpModule,
+    AuthenticationModule,
   ],
 })
 export class BookModule {}

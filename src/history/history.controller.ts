@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get, Req, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Req,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { Request } from 'express';
@@ -9,9 +17,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('History')
 @Controller('history')
+@UseGuards(AuthGuard('access'))
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 
@@ -28,7 +38,7 @@ export class HistoryController {
     try {
       return {
         status: 200,
-        response: await this.historyService.getUserBookHistory(1),
+        response: await this.historyService.getUserBookHistory(req.user.userId),
       };
     } catch (e) {
       return { status: e.HttpStatus, message: e.message };
@@ -52,7 +62,7 @@ export class HistoryController {
       return {
         status: 201,
         response: await this.historyService.createUserBookHistory(
-          1,
+          req.user.userId,
           createUserBookHistoryDto,
         ),
       };
