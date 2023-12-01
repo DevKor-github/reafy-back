@@ -13,6 +13,7 @@ import {
 import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -27,6 +28,7 @@ import { Request } from 'express';
 @ApiTags('BookService')
 @ApiBadRequestResponse({ description: 'Bad Request' })
 @Controller('book')
+@ApiBearerAuth('accessToken')
 @UseGuards(AuthGuard('access'))
 export class BookController {
   constructor(private readonly bookService: BookService) {} //BookService  주입
