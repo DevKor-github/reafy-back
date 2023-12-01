@@ -46,6 +46,7 @@ jobs:
           echo "DB_DATABASE=${{ secrets.DB_DATABASE}}" >> .env
           echo "ALADIN_API_KEY=${{ secrets.ALADIN_API_KEY}}" >> .env
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY}}" >> .env
+
           cat .env
       - name: Run Docker
         run: |
