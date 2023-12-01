@@ -2,7 +2,7 @@ name: docker-build
 
 on:
   push:
-    branches: ['main']
+    branches: ['main, refactor/bookService']
 
 env:
   DOCKER_IMAGE: ghcr.io/steadfastree/reafy
