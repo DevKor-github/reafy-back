@@ -132,9 +132,9 @@ export class BookService {
     });
 
     if (bookExist) {
-      //존재할 시, 해당 책이 bookshelf에 존재하는지 체크
-      const bookshelfBookExist = await this.bookRepository.findOne({
-        where: { bookId: bookExist.bookId },
+      //존재할 시, 해당 책이 bookshelf에 존재하는지 체크. 해당 책이 특정 유저의 책장에 존재하는지?
+      const bookshelfBookExist = await this.bookshelfRepository.findOne({
+        where: { bookId: bookExist.bookId, userId: userId },
       });
       if (bookshelfBookExist)
         throw new HttpException('이미 존재하는 책입니다', HttpStatus.CONFLICT);
