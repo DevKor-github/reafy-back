@@ -18,6 +18,6 @@ export class Memo extends BasicDate {
   @Column()
   page: number;
 
-  @Column()
+  @Column({ nullable: true })
   imageURL: string;
 }
