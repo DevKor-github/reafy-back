@@ -4,7 +4,7 @@ import { BasicDate } from './BasicDate.entity';
 @Entity('memo')
 export class Memo extends BasicDate {
   @PrimaryGeneratedColumn({ name: 'memo_id' })
-  id: number;
+  memoId: number;
 
   @Column({ name: 'user_id' })
   userId: number;
