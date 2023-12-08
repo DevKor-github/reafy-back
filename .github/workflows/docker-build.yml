@@ -2,7 +2,7 @@ name: docker-build
 
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'hotfix/deploy']
 
 env:
   DOCKER_IMAGE: ghcr.io/steadfastree/reafy
