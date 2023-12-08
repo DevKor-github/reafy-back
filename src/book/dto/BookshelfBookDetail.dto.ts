@@ -10,6 +10,10 @@ export class BookshelfBookDetailDto {
   @IsNumber()
   progressState: number;
 
+  @ApiProperty({ description: '좋아하는 책 여부' })
+  @IsNumber()
+  isFavorite: number;
+
   @ApiProperty({ description: '책 id' })
   @IsNumber()
   bookId: number;
