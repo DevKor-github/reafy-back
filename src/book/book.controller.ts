@@ -14,7 +14,6 @@ import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -170,13 +169,6 @@ export class BookController {
     description: '업데이트된 책 상태 출력',
     type: BookshelfBookDetailDto,
   })
-  @ApiBody({
-    schema: {
-      properties: {
-        progressState: { type: 'number' },
-      },
-    },
-  })
   @Put('/bookshelf/:bookshelfbookId') //Return : 변경된 책의 상세 정보
   async updateBookshelfBook(
     @Req() req,
@@ -217,62 +209,6 @@ export class BookController {
         response: await this.bookService.deleteBookshelfBook(
           req.user.userId, //userId
           bookshelfbookId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
-  }
-
-  @ApiOperation({
-    summary: '좋아하는 책 조회하기',
-    description:
-      '내 책장에 담겨 있는 책 중, My favorite에 해당하는 책들을 조회합니다.',
-  })
-  @ApiOkResponse({ description: 'My favorites 출력', type: BookshelfBookDto })
-  @Get('/favorite')
-  async getFavoriteBookshelfBook(@Req() req) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getFavoriteBookshelfBook(
-          req.user.userId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
-  }
-
-  @ApiOperation({
-    summary: '좋아하는 책으로 등록 또는 취소하기',
-    description:
-      '특정 BookshelfBookId를 Param으로 받고, Body로 isFavorite을 받아 좋아하는 책으로 등록하거나 취소합니다. favorite = 1, nonFavorite = 0(default)',
-  })
-  @ApiOkResponse({
-    description: '수정된 책 정보 출력',
-    type: BookshelfBookDetailDto,
-  })
-  @Put('/favorite/:bookshelfbookId')
-  @ApiBody({
-    schema: {
-      properties: {
-        isFavorite: { type: 'number' },
-      },
-    },
-  })
-  async updateFavoriteBookshelfBook(
-    @Req() req,
-    @Param('bookshelfbookId') bookshelfbookId: number,
-    @Body('isFavorite') isFavorite: number,
-  ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.updateFavoriteBookshelfBook(
-          req.user.userId,
-          bookshelfbookId,
-          isFavorite,
         ),
       };
     } catch (e) {

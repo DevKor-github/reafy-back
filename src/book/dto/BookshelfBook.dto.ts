@@ -14,17 +14,9 @@ export class BookshelfBookDto {
   @IsString()
   thumbnailURL: string;
 
-  @ApiProperty({ description: '작가 & 번역가' })
-  @IsString()
-  author: string;
-
   @ApiProperty({ description: '책 상태; 전 = 0, 중 = 1, 후 = 2' })
   @IsNumber()
   progressState: number;
-
-  @ApiProperty({ description: '좋아하는 책' })
-  @IsNumber()
-  isFavorite: number;
 
   @ApiOperation({ description: '응답 생성 내부 함수' })
   static async makeRes(data) {
