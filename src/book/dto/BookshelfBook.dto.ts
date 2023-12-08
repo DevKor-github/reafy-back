@@ -22,6 +22,10 @@ export class BookshelfBookDto {
   @IsNumber()
   progressState: number;
 
+  @ApiProperty({ description: '좋아하는 책' })
+  @IsNumber()
+  isFavorite: number;
+
   @ApiOperation({ description: '응답 생성 내부 함수' })
   static async makeRes(data) {
     const resData: BookshelfBookDto = { ...data };
