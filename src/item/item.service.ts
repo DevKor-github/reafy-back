@@ -3,7 +3,6 @@ import { UserItemRepository } from './userItem.repository';
 import { UserItem } from 'src/model/entity/UserItem.entity';
 import { Repository } from 'typeorm';
 import { ItemDto } from './dto/item.dto';
-import { Item } from 'src/model/entity/Item.entity';
 
 @Injectable()
 export class ItemService {
