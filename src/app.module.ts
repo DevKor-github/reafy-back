@@ -7,8 +7,8 @@ import { UserModule } from './user/user.module';
 import { BookModule } from './book/book.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { HistoryModule } from './history/history.module';
+import { ItemModule } from './item/item.module';
 import { MemoModule } from './memo/memo.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: ['.env'], isGlobal: true }),
@@ -27,6 +27,7 @@ import { MemoModule } from './memo/memo.module';
     BookModule,
     AuthenticationModule,
     HistoryModule,
+    ItemModule,
     MemoModule,
   ],
   controllers: [AppController],
