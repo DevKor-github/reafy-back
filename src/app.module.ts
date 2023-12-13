@@ -8,7 +8,7 @@ import { BookModule } from './book/book.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { HistoryModule } from './history/history.module';
 import { ItemModule } from './item/item.module';
-
+import { MemoModule } from './memo/memo.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: ['.env'], isGlobal: true }),
@@ -28,6 +28,7 @@ import { ItemModule } from './item/item.module';
     AuthenticationModule,
     HistoryModule,
     ItemModule,
+    MemoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
