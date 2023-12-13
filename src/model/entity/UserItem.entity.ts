@@ -13,5 +13,6 @@ export class UserItem {
     @Column({ name: "item_id" })
     itemId: number;
 
-
+    @Column({ name: "activation" })
+    activation: boolean;
 }
