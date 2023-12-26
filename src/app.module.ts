@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { BookModule } from './book/book.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { HistoryModule } from './history/history.module';
+import { ItemModule } from './item/item.module';
 import { MemoModule } from './memo/memo.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -32,6 +33,7 @@ import { join } from 'path';
     BookModule,
     AuthenticationModule,
     HistoryModule,
+    ItemModule,
     MemoModule,
   ],
   controllers: [AppController],

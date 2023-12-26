@@ -14,4 +14,7 @@ export class BookshelfBook extends BasicDate {
 
   @Column({ name: 'progress_state' })
   progressState: number; //책의 진행도를 index로 표현 (읽기 전 = 0, 읽는 중 = 1, 읽음 = 2)
+
+  @Column({ name: 'is_favorite', default: 0 })
+  isFavorite: number; //좋아하는 책은 1로 체크.
 }

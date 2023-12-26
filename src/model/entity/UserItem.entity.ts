@@ -8,7 +8,10 @@ export class UserItem extends BasicDate {
 
   @Column({ name: 'user_id' })
   userId: number;
+  
+    @Column({ name: "item_id" })
+    itemId: number;
 
-  @Column({ name: 'item_id' })
-  itemId: number;
+    @Column({ name: "activation" })
+    activation: boolean;
 }
