@@ -26,7 +26,7 @@ import { join } from 'path';
       logging: true, // 자동으로 쿼리문과 에러 로깅
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'upload'),
+      rootPath: join(__dirname, '..', ''),
     }),
     UserModule,
     BookModule,
