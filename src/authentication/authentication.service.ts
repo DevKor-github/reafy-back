@@ -80,10 +80,8 @@ export class AuthenticationService {
       if (oauthId) return oauthId;
       return (
         await this.userService.createUser({
-          userId: null,
           oauthId: kakaoId,
           vender: 'kakao',
-          refreshToken: null,
         })
       ).oauthId; // 회원이 없으면 회원가입 후 아이디 반환
     } catch (err) {
