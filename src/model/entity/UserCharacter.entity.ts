@@ -1,7 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BasicDate } from './BasicDate.entity';
 
 @Entity('user_character')
-export class UserCharacter {
+export class UserCharacter extends BasicDate {
   @PrimaryGeneratedColumn({ name: 'user_character_id' })
   userCharacterId: number;
 

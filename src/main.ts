@@ -9,7 +9,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Reafy API')
-    .setDescription('Reafy API specification')
+    .setDescription('Reafy API specification. 모든 시간은 UTC 기준입니다.')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -20,7 +20,8 @@ async function bootstrap() {
         in: 'header',
       },
       'accessToken',
-    ).addBearerAuth(
+    )
+    .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',

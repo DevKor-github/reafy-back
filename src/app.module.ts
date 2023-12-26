@@ -9,6 +9,9 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { HistoryModule } from './history/history.module';
 import { ItemModule } from './item/item.module';
 import { MemoModule } from './memo/memo.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: ['.env'], isGlobal: true }),
@@ -23,6 +26,9 @@ import { MemoModule } from './memo/memo.module';
       synchronize: true, //개발 중에만 쓰고, 실제 프로덕트에선 끄기
       logging: true, // 자동으로 쿼리문과 에러 로깅
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', ''),
+    }),
     UserModule,
     BookModule,
     AuthenticationModule,
@@ -33,4 +39,4 @@ import { MemoModule } from './memo/memo.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
