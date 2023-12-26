@@ -103,7 +103,7 @@ export class MemoController {
     isArray: true,
     type: MemoResDto,
   })
-  @Get('bookshelfBook')
+  @Get('bookshelfbook')
   async getMemoListByBookshelfBook(
     @Req() req: Request,
     @Query('bookshelfBookId') bookshelfBookId: number,
