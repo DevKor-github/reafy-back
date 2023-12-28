@@ -12,12 +12,7 @@ import { AuthenticationModule } from 'src/authentication/authentication.module';
   controllers: [HistoryController],
   providers: [HistoryService],
   imports: [
-    TypeOrmModule.forFeature([
-      UserBookHistory,
-      BookshelfBook,
-      Coin,
-      CoinHistory,
-    ]),
+    TypeOrmModule.forFeature([UserBookHistory, BookshelfBook]),
     AuthenticationModule,
   ],
 })

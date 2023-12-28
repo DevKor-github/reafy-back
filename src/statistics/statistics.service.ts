@@ -30,26 +30,6 @@ export class StatisticsService {
       ORDER BY months.month;`,
     );
 
-    /*
-    SELECT months.month, COALESCE(SUM(end_page - start_page), 0) AS total_pages
-      FROM (SELECT '2023-01' AS month UNION SELECT '2023-02' UNION SELECT '2023-03' UNION SELECT '2023-04' UNION SELECT '2023-05' UNION SELECT '2023-06' UNION SELECT '2023-07' UNION SELECT '2023-08' UNION SELECT '2023-09' UNION SELECT '2023-10' UNION SELECT '2023-11' UNION SELECT '2023-12') AS months
-      LEFT JOIN user_book_history ON DATE_FORMAT(created_at, '%Y-%m') = months.month
-      
-      GROUP BY months.month
-      ORDER BY months.month
-
-      SELECT months.month,
-    ->        COALESCE(SUM(end_page - start_page), 0) AS total_pages
-    -> FROM (
-    ->     SELECT '2023-01' AS month
-    ->     UNION SELECT '2023-02'
-    ->     UNION SELECT '2023-03'
-    ->     UNION SELECT '2023-12'
-    -> ) AS months
-    -> LEFT JOIN user_book_history ON DATE_FORMAT(created_at, '%Y-%m') = months.month 
-    -> GROUP BY months.month
-    -> ORDER BY months.month
-    */
     console.log(resultArray);
 
     await Promise.all(
@@ -63,7 +43,7 @@ export class StatisticsService {
     return monthlyTotalPagesList;
   }
 
-  async getMonthlyTotalEarnedCoins(userId: number, year: number) {
+  /*async getMonthlyTotalEarnedCoins(userId: number, year: number) {
     const monthlyTotalEarnedCoinsList = [];
     const userCoin = await this.coinRepository.findOneOrFail({
       where: { userId: userId },
@@ -85,7 +65,8 @@ export class StatisticsService {
     );
 
     return monthlyTotalEarnedCoinsList;
-  }
+  }*/
+
   async getMonthlyTotalReadingTimes(userId: number, year: number) {
     const monthlyTotalReadingTimesList = [];
     const resultArray = await this.userBookHistoryRepository.query(
