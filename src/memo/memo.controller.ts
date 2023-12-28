@@ -136,7 +136,7 @@ export class MemoController {
     description: '작성된 메모의 정보를 리턴합니다',
     type: MemoResDto,
   })
-  @Post('create')
+  @Post('')
   async createMemo(
     @Req() req: Request,
     @Body() createMemoDto: CreateMemoDto,
