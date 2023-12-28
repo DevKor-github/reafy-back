@@ -25,15 +25,16 @@ export class MemoService {
       order: { createdAt: 'DESC' },
       take: 10,
       skip: (page - 1) * 10,
-    });
+    }); //유저 id로 메모 검색
 
     await Promise.all(
+      //각 메모마다 연결되어 있는 해시태그 검색, DTO화
       memoList.map(async (memo) => {
         const hashtags = await this.getHashtagsByMemoId(memo.memoId);
         resultArray.push(await MemoResDto.makeRes(memo, hashtags));
       }),
     );
-    return resultArray.sort((a, b) => b.createdAt - a.createdAt);
+    return resultArray.sort((a, b) => b.createdAt - a.createdAt); //promise.all + map은 순서가 보장되지 않으므로 다시 sorting
   }
 
   async getMemoListByHashtag(userId: number, hashtag: string, page: number) {
@@ -42,13 +43,11 @@ export class MemoService {
     hashtagId로 MemoHashtag Repo에서 left join으로 memo Repo까지 find.
     createdAt 순으로 ordering, list화.
     */
-    console.log(`page is ${page}`);
     const resultArray = [];
     const selectedHashtag = await this.hashtagRepository.findOne({
-      where: { keyword: hashtag },
+      where: { keyword: hashtag }, //해시태그 찾기
     });
     const offset = (page - 1) * 10;
-    console.log(offset);
     const memoList = await this.memoHashtagRepository.query(
       `
       SELECT sq.memo_hashtag_id, memo.user_id, memo.memo_id, memo.bookshelf_book_id, memo.content, memo.page, memo.imageURL, memo.created_at, memo.updated_at
@@ -58,24 +57,10 @@ export class MemoService {
       ORDER BY memo.created_at DESC
       LIMIT 10 OFFSET ${offset};
       `,
+      /*해시태그 ID를 통해 메모-해시태그와 메모 테이블 join하여 해당하는 메모 검색. FROM 절의 subquery를 이중으로 사용함. 
+      첫 번째 subquery는 GROUP BY를 통해 해시태그 id - 메모 id 쌍에 대한 중복 제거,
+      두 번째 subquery(sq)는 subquery에 대하여 softDelete된 엔트리들을 제거해줌 -> ORM 이용했으면 더 편했을 듯 */
     );
-
-    /* 
-      SELECT memo_hashtag_id, memo_hashtag.memo_id, memo_hashtag.hashtag_id, memo.created_at, memo_hashtag.deleted_at
-      FROM (SELECT * FROM memo_hashtag GROUP BY memo_hashtag.hashtag_id, memo_hashtag.memo_id) AS subquery
-      LEFT JOIN memo ON memo_hashtag.memo_id = memo.memo_id 
-      WHERE memo.user_id = 6 AND memo_hashtag.hashtag_id = 7 AND memo_hashtag.deleted_at IS NULL
-      ORDER BY memo.created_at DESC
-      LIMIT 10 OFFSET 0;
-
-      SELECT sq.memo_hashtag_id, memo.user_id, memo.memo_id, memo.bookshelf_book_id, memo.content, memo.page, memo.imageURL, memo.created_at, memo.updated_at
-      FROM (SELECT * FROM(SELECT * FROM memo_hashtag GROUP BY hashtag_id, memo_id) AS subquery WHERE deleted_at IS NULL) as sq
-      LEFT JOIN memo ON sq.memo_id = memo.memo_id
-      WHERE memo.user_id = 6 AND sq.hashtag_id = 9
-      ORDER BY memo.created_at DESC
-      LIMIT 10 OFFSET 0; -> 이게 진짜임
-      
-      (SELECT * FROM(SELECT * FROM memo_hashtag GROUP BY hashtag_id, memo_id) AS subquery WHERE deleted_at IS NULL) */
 
     await Promise.all(
       memoList.map(async (memo) => {
@@ -89,6 +74,7 @@ export class MemoService {
       }),
     );
     return resultArray.sort((a, b) => b.createdAt - a.createdAt);
+    //각 메모에 대하여 DTO화 후 리턴.
   }
 
   async getMemoListByBookshelfBook(
@@ -102,10 +88,11 @@ export class MemoService {
       `
       SELECT * 
       FROM memo
-      WHERE memo.bookshelf_book_id = ${bookshelfBookId} AND memo.user_id = ${userId}
+      WHERE memo.bookshelf_book_id = ${bookshelfBookId} AND memo.user_id = ${userId} AND memo.deleted_at IS NULL
       ORDER BY memo.created_at DESC
       LIMIT 10 OFFSET ${offset};
       `,
+      //Soft Delete 체크.
     );
 
     await Promise.all(
@@ -126,6 +113,7 @@ export class MemoService {
   }
 
   async getHashtagsByMemoId(memoId: number) {
+    //해당 메모가 가지고 있는 Hashtag array를 반환하는 내부 함수
     const hashtags = [];
     const hashtagData = await this.memoHashtagRepository.query(
       `
@@ -143,7 +131,7 @@ export class MemoService {
 
   async getMemoDetail(userId: number, memoId: number) {
     /*
-    memoId로 select해서 반납.MemoRes에서 해시태그 파싱.
+    memoId로 select해서 반납. MemoRes에서 해시태그 파싱.
     */
     const memo = await this.memoRepository.findOne({
       where: {
@@ -165,6 +153,7 @@ export class MemoService {
     const { bookshelfBookId, content, page, hashtag } = createMemoDto; //id, page number화, hashtag 파싱.
 
     const createdMemo = await this.memoRepository.save({
+      //메모 생성
       userId: userId,
       bookshelfBookId: Number(bookshelfBookId),
       content: content,
@@ -172,17 +161,19 @@ export class MemoService {
       imageURL: file ? file.path : null,
     });
 
-    const splitedHastags = hashtag.split(', ');
+    const splitedHastags = hashtag.split(', '); //hashtag 파싱
 
     await Promise.all(
       splitedHastags.map(async (hashtag) => {
         let existingHashtag = await this.hashtagRepository.findOne({
+          //해시태그 존재 여부 체크
           where: { keyword: hashtag },
         });
         if (!existingHashtag) {
-          existingHashtag = await this.createHashtag(userId, hashtag);
+          existingHashtag = await this.createHashtag(userId, hashtag); //해시태그 생성
         }
         await this.memoHashtagRepository.save({
+          //메모-해시태그 연결체
           memoId: createdMemo.memoId,
           hashtagId: existingHashtag.hashtagId,
         });
@@ -190,9 +181,7 @@ export class MemoService {
     );
 
     return await MemoResDto.makeRes(createdMemo, splitedHastags);
-  } //주어진 해쉬태그가 존재하면 바로 해쉬태그 연결체 만들고, 아니면 createHashtag 실행 후 그것으로 연결
-
-  //해쉬태그는 memo 객체에 바로 들어있는 게 아니다..
+  }
 
   async createHashtag(userId: number, hashtag: string) {
     return await this.hashtagRepository.save({
@@ -218,18 +207,19 @@ export class MemoService {
     existingMemo.content = content;
     existingMemo.page = page;
     existingMemo.imageURL = file ? file.path : null;
-    await this.memoRepository.save(existingMemo);
+    await this.memoRepository.save(existingMemo); //메모 내용, 페이지, 이미지 업데이트
 
     const splitedNewHastags = hashtag.split(', ');
     await Promise.all(
       splitedNewHastags.map(async (hashtag) => {
         let existingHashtag = await this.hashtagRepository.findOne({
-          where: { keyword: hashtag },
+          where: { keyword: hashtag }, //해당 해시태그가 이미 존재하는지 검색
         });
         if (!existingHashtag) {
-          existingHashtag = await this.createHashtag(userId, hashtag);
+          existingHashtag = await this.createHashtag(userId, hashtag); //없으면 테이블에 생성
         }
-        const createdMemoHashtag = await this.memoHashtagRepository.save({
+        await this.memoHashtagRepository.save({
+          //메모-해시태그 관계 만들기
           memoId: existingMemo.memoId,
           hashtagId: existingHashtag.hashtagId,
         });
