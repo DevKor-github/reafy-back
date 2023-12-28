@@ -3,6 +3,7 @@ import { ItemService } from './item.service';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ItemDto } from './dto/item.dto';
+import { ItemReqDto } from './dto/itemReq.dto';
 
 @ApiTags("Item")
 @UseGuards(AuthGuard('access'))
@@ -40,11 +41,11 @@ export class ItemController {
     @ApiBearerAuth('accessToken')
     @Post()
     async buyItem(
-        @Body() itemDto: ItemDto,
+        @Body() itemReqDto: ItemReqDto,
         @Req() req,
     ): Promise<ItemDto> {
         const userId = req.user.userId;
-        return await this.itemService.buyItem(userId, itemDto);
+        return await this.itemService.buyItem(userId, itemReqDto);
     }
 
 }

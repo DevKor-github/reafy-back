@@ -9,18 +9,21 @@ import { JwtAccessStrategy } from './jwt-access.strategy';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
+import { CoinService } from 'src/coin/coin.service';
+import { CoinModule } from 'src/coin/coin.module';
 
 @Module({
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],
       global: true,
-      useFactory:(config: ConfigService) => ({
+      useFactory: (config: ConfigService) => ({
         secret: config.get<string>("JWT_SECRET_KEY"),
         signOptions: { expiresIn: ACCESS_TOKEN_EXPIRE, },
       })
     }),
     UserModule,
+    CoinModule,
     HttpModule,
     PassportModule,
   ],

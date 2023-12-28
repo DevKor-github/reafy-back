@@ -17,14 +17,16 @@ import {
 import { JwtSubjectType } from 'src/common/type/authentication.type';
 import { User } from 'src/model/entity/User.entity';
 import axios from 'axios';
+import { CoinService } from 'src/coin/coin.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
     private readonly userService: UserService,
+    private readonly coinService: CoinService,
     private readonly jwtService: JwtService,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   async login(data: LoginRequest, res): Promise<TokenResponse> {
     try {
@@ -78,12 +80,16 @@ export class AuthenticationService {
       const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
 
       if (oauthId) return oauthId;
-      return (
-        await this.userService.createUser({
-          oauthId: kakaoId,
-          vender: 'kakao',
-        })
-      ).oauthId; // 회원이 없으면 회원가입 후 아이디 반환
+
+      // 회원이 없으면 회원가입 후 아이디 반환
+      const createdUser: User = await this.userService.createUser({
+        oauthId: kakaoId,
+        vender: 'kakao',
+      });
+
+      this.coinService.createCoin(createdUser.userId);
+      return createdUser.oauthId;
+
     } catch (err) {
       console.log(`error : ${err}`);
       throw new InternalServerErrorException();

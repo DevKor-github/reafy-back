@@ -10,10 +10,7 @@ import { CreateUserDto } from './dtos/CreateUser.dto';
 
 @Injectable()
 export class UserService {
-  constructor(
-    private readonly userRepository: UserRepository,
-    @InjectRepository(Coin) private readonly coinRepository: Repository<Coin>,
-  ) {}
+  constructor(private readonly userRepository: UserRepository ) {}
 
   async createUser(data: CreateUserDto): Promise<User> {
     // 유저 닉네임, 이름 등 설정 시 해당 내용 검증
@@ -23,9 +20,6 @@ export class UserService {
     newUser.vender = data.vender;
 
     await this.userRepository.create(newUser);
-
-    await this.coinRepository.save({ userId: newUser.userId });
-
     return newUser;
   }
   async updateUser(data: User): Promise<User> {
