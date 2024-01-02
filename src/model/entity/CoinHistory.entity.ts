@@ -22,4 +22,7 @@ export class CoinHistory extends BasicDate {
 
   @Column({ name: 'item_id', nullable: true })
   itemId: number;
+
+  @Column({ name: 'type' })
+  type: number; // 독서 기록 : 0, 아이템 구매 : 1, 대나무 수집: 2
 }

@@ -11,6 +11,7 @@ import { ItemModule } from './item/item.module';
 import { MemoModule } from './memo/memo.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { StatisticsModule } from './statistics/statistics.module';
 import { CoinModule } from './coin/coin.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { CoinModule } from './coin/coin.module';
     HistoryModule,
     ItemModule,
     MemoModule,
+    StatisticsModule,
     CoinModule,
   ],
   controllers: [AppController],
