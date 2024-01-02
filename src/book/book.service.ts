@@ -10,15 +10,16 @@ import { SearchBookResDto } from 'src/book/dto/SearchBookRes.dto';
 import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
 import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
 import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
+import { BookRepository } from './repository/book.repository';
+import { BookShelfRepository } from './repository/bookshelf.repository';
+import { UserBookHistoryRepository } from 'src/history/userbookhistory.repository';
 
 @Injectable()
 export class BookService {
   constructor(
-    @InjectRepository(Book) private readonly bookRepository: Repository<Book>,
-    @InjectRepository(BookshelfBook)
-    private readonly bookshelfRepository: Repository<BookshelfBook>,
-    @InjectRepository(UserBookHistory)
-    private readonly userBookHistoryRepository: Repository<UserBookHistory>,
+    private readonly bookRepository: BookRepository,
+    private readonly bookshelfRepository: BookShelfRepository,
+    private readonly userBookHistoryRepository: UserBookHistoryRepository,
     private readonly httpService: HttpService,
   ) {} //Book repository inject.
 
@@ -28,14 +29,16 @@ export class BookService {
 
   async searchBook(query: string, page: number): Promise<SearchBookResDto[]> {
     //query와 page에 맞는 DTO list 리턴. Swagger needed. 200.
-    const result = await this.httpService.axiosRef.get(
+    const resultArray = await this.httpService.axiosRef.get(
       `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Cover=Big&Version=20131101&start=${page}`,
     );
-    let resultArray: SearchBookResDto[] = [];
-    for (let i = 0; i < 10; i++) {
-      resultArray.push(await SearchBookResDto.makeRes(result.data.item[i]));
-    }
-    return resultArray;
+    let SearchBookList: SearchBookResDto[] = [];
+    await Promise.all(
+      resultArray.data.item.map(async (item) => {
+        SearchBookList.push(await SearchBookResDto.makeRes(item));
+      }),
+    );
+    return SearchBookList;
   }
 
   async registerBook(isbn13: string) {
@@ -49,37 +52,17 @@ export class BookService {
     return await this.bookRepository.save(registeredBook);
   }
 
-  async getBookshelfBook(userId: number): Promise<BookshelfBookDto[]> {
-    //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200. 책장책 id, 제목, 표지 url을 전달.
-    const resultArray = await this.bookRepository.query(
-      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title, book.thumbnail_url,  book.author, bookshelf_book.progress_state 
-      from user
-      left join bookshelf_book on user.user_id = bookshelf_book.user_id 
-      left join book on bookshelf_book.book_id = book.book_id
-      where user.user_id = ${userId} ;`,
-    );
-
-    const bookshelfBookList: BookshelfBookDto[] = await Promise.all(
-      resultArray.map((book) => {
-        return BookshelfBookDto.makeRes(book);
-      }),
-    );
-    return bookshelfBookList;
-  }
-
   async getBookshelfBookOnState(
     userId: number,
     progressState: number,
   ): Promise<BookshelfBookDto[]> {
     //상태를 index화 시켜서(0,1,2) param에 따라 그에 맞는 bookshelfbook 리턴
     //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200. 책장책 id, 제목, 표지 url을 전달.
-    const resultArray = await this.bookRepository.query(
-      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title,  book.thumbnail_url, book.author, bookshelf_book.progress_state, bookshelf_book.is_favorite 
-      from user
-      left join bookshelf_book on user.user_id = bookshelf_book.user_id 
-      left join book on bookshelf_book.book_id = book.book_id
-      where user.user_id = ${userId} and bookshelf_book.progress_state =${progressState};`,
+    const resultArray = await this.bookRepository.getBookshelfBookOnState(
+      userId,
+      progressState,
     );
+
     const bookshelfBookListOnState: BookshelfBookDto[] = await Promise.all(
       resultArray.map((book) => {
         return BookshelfBookDto.makeRes(book);
@@ -91,15 +74,9 @@ export class BookService {
 
   async getBookshelfBookDetail(userId: number, bookshelfbookId: number) {
     //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
-    console.log(userId);
-    console.log(bookshelfbookId);
-    const resultArray = await this.bookshelfRepository.query(
-      `
-      SELECT *
-      FROM bookshelf_book
-      LEFT JOIN book ON book.book_id = bookshelf_book.book_id
-      WHERE bookshelf_book.user_id = ${userId} AND bookshelf_book.bookshelf_book_id = ${bookshelfbookId};
-      `,
+    const resultArray = await this.bookshelfRepository.getBookshelfBookDetail(
+      userId,
+      bookshelfbookId,
     );
 
     const firstPage = await this.userBookHistoryRepository.findOne({
@@ -212,13 +189,9 @@ export class BookService {
 
   async getFavoriteBookshelfBook(userId: number): Promise<BookshelfBookDto[]> {
     console.log(userId);
-    const resultArray = await this.bookRepository.query(
-      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title,  book.thumbnail_url, book.author, bookshelf_book.progress_state, bookshelf_book.is_favorite 
-      from user
-      left join bookshelf_book on user.user_id = bookshelf_book.user_id 
-      left join book on bookshelf_book.book_id = book.book_id
-      where user.user_id = ${userId} and bookshelf_book.is_favorite = 1;`,
-    );
+    const resultArray =
+      await this.bookRepository.getFavoriteBookshelfBook(userId);
+
     const favoriteBookshelfBookList: BookshelfBookDto[] = await Promise.all(
       resultArray.map((book) => {
         return BookshelfBookDto.makeRes(book);
