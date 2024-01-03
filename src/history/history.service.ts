@@ -23,6 +23,7 @@ export class HistoryService {
   ): Promise<UserBookHistoryResDto[]> {
     const resultArray = await this.userBookHistoryRepository.find({
       where: { userId: userId, bookshelfBookId: bookshelfBookId },
+      order: { createdAt: 'DESC' },
     });
     return await this.ProcessHistoryList(resultArray);
   }
