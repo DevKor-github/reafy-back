@@ -17,7 +17,7 @@ export class BookRepository extends Repository<Book> {
     from user
     left join bookshelf_book on user.user_id = bookshelf_book.user_id 
     left join book on bookshelf_book.book_id = book.book_id
-    where user.user_id = ${userId} and bookshelf_book.progress_state =${progressState};`,
+    where user.user_id = ${userId} and bookshelf_book.progress_state =${progressState} AND bookshelf_book.deleted_at IS NULL;`,
     );
   }
 
@@ -27,6 +27,6 @@ export class BookRepository extends Repository<Book> {
     from user
     left join bookshelf_book on user.user_id = bookshelf_book.user_id 
     left join book on bookshelf_book.book_id = book.book_id
-    where user.user_id = ${userId} and bookshelf_book.is_favorite = 1;`);
+    where user.user_id = ${userId} and bookshelf_book.is_favorite = 1 AND bookshelf_book.deleted_at IS NULL;`);
   }
 }

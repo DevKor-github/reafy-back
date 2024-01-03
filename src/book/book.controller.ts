@@ -39,7 +39,11 @@ export class BookController {
     description:
       '검색어 Query와 Page를 받아 알라딘 APi를 통한 검색 결과를 노출합니다. 페이지는 10개 단위로 주어지며, 응답은 SearchBookResDto의 리스트 형태로 주어집니다.',
   })
-  @ApiOkResponse({ description: '검색 결과 출력', type: SearchBookResDto })
+  @ApiOkResponse({
+    description: '검색 결과 출력',
+    type: SearchBookResDto,
+    isArray: true,
+  })
   @Get('/search') // Return : 검색 결과 리스트(10개 단위)
   async searchBook(
     @Req() req,
@@ -84,29 +88,6 @@ export class BookController {
     }
   }
 
-  //이하는 jwt 도입 시 jwtAutoGuard 적용. userid parameter 제거
-  //중복이라 일단 주석처리.
-  /*@ApiOperation({
-    summary: '책장 조회하기',
-    description:
-      '책장을 조회합니다. bookshelfId, bookId, title, thumbnaulURL, progressState가 담겨 있는 리스트를 반환합니다.',
-  })
-  @ApiOkResponse({
-    description: '책장 조회 결과 출력',
-    type: BookshelfBookDto,
-  })
-  @Get('/bookshelf') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
-  async getBookshelfBook(@Req() req) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getBookshelfBook(1),
-      }; //요청 오브젝트에서 user Id 가져오기
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
-  }*/
-
   @ApiOperation({
     summary: '상태별 책장 조회하기; 전 = 0, 중 = 1, 후 = 2',
     description:
@@ -115,6 +96,7 @@ export class BookController {
   @ApiOkResponse({
     description: '해당 상태의 책장 조회 결과 출력',
     type: BookshelfBookDto,
+    isArray: true,
   })
   @Get('/bookshelf') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
   async getBookshelfBookOnState(
@@ -229,7 +211,11 @@ export class BookController {
     description:
       '내 책장에 담겨 있는 책 중, My favorite에 해당하는 책들을 조회합니다.',
   })
-  @ApiOkResponse({ description: 'My favorites 출력', type: BookshelfBookDto })
+  @ApiOkResponse({
+    description: 'My favorites 출력',
+    type: BookshelfBookDto,
+    isArray: true,
+  })
   @Get('/favorite')
   async getFavoriteBookshelfBook(@Req() req) {
     try {

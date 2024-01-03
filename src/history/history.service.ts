@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
-import { UserBookHistoryRepository } from './userbookhistory.repository';
+import { UserBookHistoryRepository } from './repository/user-book-history.repository';
+import { UserBookHistoryResDto } from './dtos/UserBookHistoryRes.dto';
 
 @Injectable()
 export class HistoryService {
@@ -8,28 +9,43 @@ export class HistoryService {
     private readonly userBookHistoryRepository: UserBookHistoryRepository,
   ) {}
 
-  async getUserBookHistory(userId: number) {
-    const userBookHistoryList = await this.userBookHistoryRepository.find({
+  async getUserBookHistory(userId: number): Promise<UserBookHistoryResDto[]> {
+    const resultArray = await this.userBookHistoryRepository.find({
       where: { userId: userId },
+      order: { createdAt: 'DESC' },
     });
-    return userBookHistoryList;
+    return await this.ProcessHistoryList(resultArray);
   }
+
   async getUserBookHistoryByBookshelfBook(
     userId: number,
     bookshelfBookId: number,
-  ) {
-    const userBookHistoryList = await this.userBookHistoryRepository.find({
+  ): Promise<UserBookHistoryResDto[]> {
+    const resultArray = await this.userBookHistoryRepository.find({
       where: { userId: userId, bookshelfBookId: bookshelfBookId },
     });
-    return userBookHistoryList;
+    return await this.ProcessHistoryList(resultArray);
   }
+
   async createUserBookHistory(
     userId: number,
     createUserBookHistoryDto: CreateUserBookHistoryDto,
-  ) {
-    return await this.userBookHistoryRepository.save({
-      userId,
-      ...createUserBookHistoryDto,
-    });
+  ): Promise<UserBookHistoryResDto> {
+    return await UserBookHistoryResDto.makeRes(
+      await this.userBookHistoryRepository.save({
+        userId,
+        ...createUserBookHistoryDto,
+      }),
+    );
+  }
+
+  async ProcessHistoryList(resultArray: any): Promise<UserBookHistoryResDto[]> {
+    const userBookHistoryList = [];
+    await Promise.all(
+      resultArray.map(async (history) => {
+        userBookHistoryList.push(await UserBookHistoryResDto.makeRes(history));
+      }),
+    );
+    return userBookHistoryList;
   }
 }

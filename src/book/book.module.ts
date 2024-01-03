@@ -9,7 +9,7 @@ import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { BookRepository } from './repository/book.repository';
 import { BookShelfRepository } from './repository/bookshelf.repository';
-import { UserBookHistoryRepository } from 'src/history/userbookhistory.repository';
+import { UserBookHistoryRepository } from 'src/history/repository/user-book-history.repository';
 import { HistoryModule } from 'src/history/history.module';
 
 @Module({

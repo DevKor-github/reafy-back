@@ -12,7 +12,7 @@ import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
 import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
 import { BookRepository } from './repository/book.repository';
 import { BookShelfRepository } from './repository/bookshelf.repository';
-import { UserBookHistoryRepository } from 'src/history/userbookhistory.repository';
+import { UserBookHistoryRepository } from 'src/history/repository/user-book-history.repository';
 
 @Injectable()
 export class BookService {
@@ -42,7 +42,7 @@ export class BookService {
   }
 
   //내부 책 DB 등록
-  async registerBook(isbn13: string) {
+  async registerBook(isbn13: string): Promise<Book> {
     const result = await this.httpService.axiosRef.get(
       `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${process.env.ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${isbn13}&Cover=Big&output=js&Version=20131101`,
     );
@@ -72,23 +72,22 @@ export class BookService {
   }
 
   //유저 책장에 있는 책의 상세 정보
-  async getBookshelfBookDetail(userId: number, bookshelfbookId: number) {
+  async getBookshelfBookDetail(
+    userId: number,
+    bookshelfbookId: number,
+  ): Promise<BookshelfBookDetailDto> {
     const resultArray = await this.bookshelfRepository.getBookshelfBookDetail(
       userId,
       bookshelfbookId,
     );
 
-    const firstPage = await this.userBookHistoryRepository.findOne({
-      where: { bookshelfBookId: bookshelfbookId },
-      order: { startPage: 'ASC' },
-    });
-    const lastPage = await this.userBookHistoryRepository.findOne({
-      where: { bookshelfBookId: bookshelfbookId },
-      order: { endPage: 'DESC' },
-    });
+    const firstHistory =
+      await this.userBookHistoryRepository.getStartHistory(bookshelfbookId);
+    const lastHistory =
+      await this.userBookHistoryRepository.getEndHistory(bookshelfbookId);
 
-    const startPage = firstPage ? firstPage.startPage : 0;
-    const endPage = lastPage ? lastPage.endPage : 0;
+    const startPage = firstHistory ? firstHistory.startPage : 0;
+    const endPage = lastHistory ? lastHistory.endPage : 0;
 
     return await BookshelfBookDetailDto.makeRes(
       resultArray[0],
@@ -98,7 +97,10 @@ export class BookService {
   }
 
   //검색 결과에서 isbn13을 이용해 유저 책장에 저장
-  async saveInBookshelf(userId: number, userBookItems: SaveInBookshelfReqDto) {
+  async saveInBookshelf(
+    userId: number,
+    userBookItems: SaveInBookshelfReqDto,
+  ): Promise<BookshelfBookDetailDto> {
     const bookExist = await this.bookRepository.findOne({
       where: { isbn13: userBookItems.isbn13 },
     });
@@ -144,7 +146,7 @@ export class BookService {
     userId: number,
     bookshelfbookId: number,
     progressState: number,
-  ) {
+  ): Promise<BookshelfBookDetailDto> {
     const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
       where: { userId: userId, bookshelfBookId: bookshelfbookId },
     });
@@ -156,14 +158,17 @@ export class BookService {
     return await this.getBookshelfBookDetail(userId, bookshelfbookId);
   }
 
-  async deleteBookshelfBook(userId: number, bookshelfbookId: number) {
+  async deleteBookshelfBook(
+    userId: number,
+    bookshelfbookId: number,
+  ): Promise<BookshelfBookDetailDto> {
     const deletedBookshelfBook = await this.getBookshelfBookDetail(
       //삭제되는 책 정보
       userId,
       bookshelfbookId,
     );
 
-    await this.bookshelfRepository.delete({
+    await this.bookshelfRepository.softDelete({
       userId: userId,
       bookshelfBookId: bookshelfbookId,
     });
@@ -187,7 +192,7 @@ export class BookService {
     userId: number,
     bookshelfbookId: number,
     isFavorite: number,
-  ) {
+  ): Promise<BookshelfBookDetailDto> {
     const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
       where: { userId: userId, bookshelfBookId: bookshelfbookId },
     });

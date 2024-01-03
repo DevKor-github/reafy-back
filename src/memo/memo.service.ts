@@ -5,6 +5,7 @@ import { MemoResDto } from './dtos/MemoRes.dto';
 import { MemoRepository } from './repository/memo.repository';
 import { MemoHashtagRepository } from './repository/memo-hashtag.repository';
 import { HashtagRepository } from './repository/hashtag.repository';
+import { Hashtag } from 'src/model/entity/Hashtag.entity';
 
 @Injectable()
 export class MemoService {
@@ -14,7 +15,7 @@ export class MemoService {
     private readonly hashtagRepository: HashtagRepository,
   ) {}
 
-  async getMemoList(userId: number, page: number) {
+  async getMemoList(userId: number, page: number): Promise<MemoResDto[]> {
     const memoList = [];
     const resultArray = await this.memoRepository.getMemoListById(userId, page);
 
@@ -27,7 +28,27 @@ export class MemoService {
     return memoList.sort((a, b) => b.createdAt - a.createdAt); //promise.all + map은 순서가 보장되지 않으므로 다시 sorting
   }
 
-  async getMemoListByHashtag(userId: number, hashtag: string, page: number) {
+  async processMemoList(resultArray: any): Promise<MemoResDto[]> {
+    const memoList = [];
+    await Promise.all(
+      resultArray.map(async (memo) => {
+        memo.userId = memo.user_id;
+        memo.bookshelfBookId = memo.bookshelf_book_id;
+        memo.memoId = memo.memo_id;
+        memo.createdAt = memo.created_at;
+        memo.updatedAt = memo.updated_at;
+        const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
+        memoList.push(await MemoResDto.makeRes(memo, hashtags));
+      }),
+    );
+    return memoList.sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  async getMemoListByHashtag(
+    userId: number,
+    hashtag: string,
+    page: number,
+  ): Promise<MemoResDto[]> {
     //hashtag -> hashtagId 검색, hashtagId로 MemoHashtag에서 LEFT JOIN
     const selectedHashtag = await this.hashtagRepository.findOne({
       where: { keyword: hashtag },
@@ -38,34 +59,6 @@ export class MemoService {
       (page - 1) * 10,
     );
     return await this.processMemoList(resultArray);
-    /*await Promise.all(
-      resultArray.map(async (memo) => {
-        memo.userId = memo.user_id;
-        memo.bookshelfBookId = memo.bookshelf_book_id;
-        memo.memoId = memo.memo_id;
-        memo.createdAt = memo.created_at;
-        memo.updatedAt = memo.updated_at;
-        const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
-        memoList.push(await MemoResDto.makeRes(memo, hashtags));
-      }),
-    );
-    return memoList.sort((a, b) => b.createdAt - a.createdAt);*/
-  }
-
-  async processMemoList(resultArray: any) {
-    const memoList = [];
-    await Promise.all(
-      resultArray.map(async (memo) => {
-        memo.userId = memo.user_id;
-        memo.bookshelfBookId = memo.bookshelf_book_id;
-        memo.memoId = memo.memo_id;
-        memo.createdAt = memo.created_at;
-        memo.updatedAt = memo.updated_at;
-        const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
-        memoList.push(await MemoResDto.makeRes(memo, hashtags));
-      }),
-    );
-    return memoList.sort((a, b) => b.createdAt - a.createdAt);
   }
 
   async getMemoListByBookshelfBook(
@@ -73,50 +66,29 @@ export class MemoService {
     bookshelfBookId: number,
     page: number,
   ) {
-    const memoList = [];
     const resultArray = await this.memoRepository.getMemoListByBookshelfBookId(
       userId,
       bookshelfBookId,
       (page - 1) * 10,
     );
 
-    await Promise.all(
-      resultArray.map(async (memo) => {
-        memo.userId = memo.user_id;
-        memo.bookshelfBookId = memo.bookshelf_book_id;
-        memo.memoId = memo.memo_id;
-        memo.createdAt = memo.created_at;
-        memo.updatedAt = memo.updated_at;
-        const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
-
-        memoList.push(await MemoResDto.makeRes(memo, hashtags));
-      }),
-    );
-
-    return memoList.sort((a, b) => b.createdAt - a.createdAt);
+    return await this.processMemoList(resultArray);
   }
 
-  async getHashtagsByMemoId(memoId: number) {
+  async getHashtagsByMemoId(memoId: number): Promise<string[]> {
     //해당 메모가 가지고 있는 Hashtag array를 반환하는 내부 함수
     const hashtags = [];
-    const hashtagData = await this.memoHashtagRepository.query(
-      `
-    SELECT hashtag.keyword
-    FROM memo_hashtag
-    LEFT JOIN hashtag on memo_hashtag.hashtag_id = hashtag.hashtag_id
-    WHERE memo_hashtag.memo_id = ${memoId} AND memo_hashtag.deleted_at IS NULL;
-    `,
-    );
+    const hashtagData =
+      await this.memoHashtagRepository.getHashtagsByMemoId(memoId);
 
-    hashtagData.map((hashtag) => hashtags.push(hashtag.keyword));
+    await Promise.all(
+      hashtagData.map(async (hashtag) => hashtags.push(hashtag.keyword)),
+    );
 
     return hashtags;
   }
 
-  async getMemoDetail(userId: number, memoId: number) {
-    /*
-    memoId로 select해서 반납. MemoRes에서 해시태그 파싱.
-    */
+  async getMemoDetail(userId: number, memoId: number): Promise<MemoResDto> {
     const memo = await this.memoRepository.findOne({
       where: {
         userId: userId,
@@ -133,7 +105,7 @@ export class MemoService {
     userId: number,
     createMemoDto: CreateMemoDto,
     file: Express.Multer.File,
-  ) {
+  ): Promise<MemoResDto> {
     const { bookshelfBookId, content, page, hashtag } = createMemoDto; //id, page number화, hashtag 파싱.
 
     const createdMemo = await this.memoRepository.save({
@@ -157,7 +129,7 @@ export class MemoService {
           existingHashtag = await this.createHashtag(userId, hashtag); //해시태그 생성
         }
         await this.memoHashtagRepository.save({
-          //메모-해시태그 연결체
+          //메모-해시태그 연결체 생성
           memoId: createdMemo.memoId,
           hashtagId: existingHashtag.hashtagId,
         });
@@ -167,19 +139,19 @@ export class MemoService {
     return await MemoResDto.makeRes(createdMemo, splitedHastags);
   }
 
-  async createHashtag(userId: number, hashtag: string) {
+  async createHashtag(userId: number, hashtag: string): Promise<Hashtag> {
     return await this.hashtagRepository.save({
       userId: userId,
       keyword: hashtag,
     });
-  } //리턴값으로 해당 해쉬태그 아이디
+  }
 
   async updateMemo(
     userId: number,
     memoId: number,
     updateMemoDto: UpdateMemoDto,
     file: Express.Multer.File,
-  ) {
+  ): Promise<MemoResDto> {
     const { content, page, hashtag } = updateMemoDto;
 
     await this.memoHashtagRepository.softDelete({ memoId: memoId });
@@ -213,7 +185,7 @@ export class MemoService {
     return await MemoResDto.makeRes(existingMemo, splitedNewHastags);
   }
 
-  async deleteMemo(userId: number, memoId: number) {
+  async deleteMemo(userId: number, memoId: number): Promise<string> {
     await this.memoRepository.softDelete({ memoId: memoId, userId: userId });
     return `memo ${memoId} is deleted successfully`;
   }

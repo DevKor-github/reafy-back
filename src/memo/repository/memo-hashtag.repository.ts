@@ -25,4 +25,15 @@ export class MemoHashtagRepository extends Repository<MemoHashtag> {
       첫 번째 subquery는 GROUP BY를 통해 해시태그 id - 메모 id 쌍에 대한 중복 제거,
       두 번째 subquery(sq)는 subquery에 대하여 softDelete된 엔트리들을 제거해줌 -> ORM 이용했으면 더 편했을 듯 */
   }
+
+  async getHashtagsByMemoId(memoId: number) {
+    return await this.query(
+      `
+    SELECT hashtag.keyword
+    FROM memo_hashtag
+    LEFT JOIN hashtag on memo_hashtag.hashtag_id = hashtag.hashtag_id
+    WHERE memo_hashtag.memo_id = ${memoId} AND memo_hashtag.deleted_at IS NULL;
+    `,
+    );
+  }
 }
