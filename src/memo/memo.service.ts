@@ -1,80 +1,71 @@
-import { Hashtag } from './../model/entity/Hashtag.entity';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Memo } from 'src/model/entity/Memo.entity';
-import { MemoHashtag } from 'src/model/entity/MemoHashtags.entity';
-import { Repository } from 'typeorm';
 import { CreateMemoDto } from './dtos/CreateMemo.dto';
 import { UpdateMemoDto } from './dtos/UpdateMemo.dto';
 import { MemoResDto } from './dtos/MemoRes.dto';
+import { MemoRepository } from './repository/memo.repository';
+import { MemoHashtagRepository } from './repository/memo-hashtag.repository';
+import { HashtagRepository } from './repository/hashtag.repository';
 
 @Injectable()
 export class MemoService {
   constructor(
-    @InjectRepository(Memo) private readonly memoRepository: Repository<Memo>,
-    @InjectRepository(MemoHashtag)
-    private readonly memoHashtagRepository: Repository<MemoHashtag>,
-    @InjectRepository(Hashtag)
-    private readonly hashtagRepository: Repository<Hashtag>,
+    private readonly memoRepository: MemoRepository,
+    private readonly memoHashtagRepository: MemoHashtagRepository,
+    private readonly hashtagRepository: HashtagRepository,
   ) {}
 
   async getMemoList(userId: number, page: number) {
-    const resultArray = [];
-    const memoList = await this.memoRepository.find({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-      take: 10,
-      skip: (page - 1) * 10,
-    }); //유저 id로 메모 검색
+    const memoList = [];
+    const resultArray = await this.memoRepository.getMemoListById(userId, page);
 
     await Promise.all(
-      //각 메모마다 연결되어 있는 해시태그 검색, DTO화
-      memoList.map(async (memo) => {
+      resultArray.map(async (memo) => {
         const hashtags = await this.getHashtagsByMemoId(memo.memoId);
-        resultArray.push(await MemoResDto.makeRes(memo, hashtags));
+        memoList.push(await MemoResDto.makeRes(memo, hashtags));
       }),
     );
-    return resultArray.sort((a, b) => b.createdAt - a.createdAt); //promise.all + map은 순서가 보장되지 않으므로 다시 sorting
+    return memoList.sort((a, b) => b.createdAt - a.createdAt); //promise.all + map은 순서가 보장되지 않으므로 다시 sorting
   }
 
   async getMemoListByHashtag(userId: number, hashtag: string, page: number) {
-    /*
-    특정 hashtag 키워드로 hashtag repo에서 검색, hashtagId 가져오기
-    hashtagId로 MemoHashtag Repo에서 left join으로 memo Repo까지 find.
-    createdAt 순으로 ordering, list화.
-    */
-    const resultArray = [];
+    //hashtag -> hashtagId 검색, hashtagId로 MemoHashtag에서 LEFT JOIN
     const selectedHashtag = await this.hashtagRepository.findOne({
-      where: { keyword: hashtag }, //해시태그 찾기
+      where: { keyword: hashtag },
     });
-    const offset = (page - 1) * 10;
-    const memoList = await this.memoHashtagRepository.query(
-      `
-      SELECT sq.memo_hashtag_id, memo.user_id, memo.memo_id, memo.bookshelf_book_id, memo.content, memo.page, memo.imageURL, memo.created_at, memo.updated_at
-      FROM (SELECT * FROM(SELECT * FROM memo_hashtag GROUP BY hashtag_id, memo_id) AS subquery WHERE deleted_at IS NULL) as sq
-      LEFT JOIN memo ON sq.memo_id = memo.memo_id
-      WHERE memo.user_id = ${userId} AND sq.hashtag_id = ${selectedHashtag.hashtagId} AND memo.deleted_at IS NULL
-      ORDER BY memo.created_at DESC
-      LIMIT 10 OFFSET ${offset};
-      `,
-      /*해시태그 ID를 통해 메모-해시태그와 메모 테이블 join하여 해당하는 메모 검색. FROM 절의 subquery를 이중으로 사용함. 
-      첫 번째 subquery는 GROUP BY를 통해 해시태그 id - 메모 id 쌍에 대한 중복 제거,
-      두 번째 subquery(sq)는 subquery에 대하여 softDelete된 엔트리들을 제거해줌 -> ORM 이용했으면 더 편했을 듯 */
+    const resultArray = await this.memoHashtagRepository.getMemoListByHashtag(
+      userId,
+      selectedHashtag.hashtagId,
+      (page - 1) * 10,
     );
-
-    await Promise.all(
-      memoList.map(async (memo) => {
+    return await this.processMemoList(resultArray);
+    /*await Promise.all(
+      resultArray.map(async (memo) => {
         memo.userId = memo.user_id;
         memo.bookshelfBookId = memo.bookshelf_book_id;
         memo.memoId = memo.memo_id;
         memo.createdAt = memo.created_at;
         memo.updatedAt = memo.updated_at;
         const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
-        resultArray.push(await MemoResDto.makeRes(memo, hashtags));
+        memoList.push(await MemoResDto.makeRes(memo, hashtags));
       }),
     );
-    return resultArray.sort((a, b) => b.createdAt - a.createdAt);
-    //각 메모에 대하여 DTO화 후 리턴.
+    return memoList.sort((a, b) => b.createdAt - a.createdAt);*/
+  }
+
+  async processMemoList(resultArray: any) {
+    const memoList = [];
+    await Promise.all(
+      resultArray.map(async (memo) => {
+        memo.userId = memo.user_id;
+        memo.bookshelfBookId = memo.bookshelf_book_id;
+        memo.memoId = memo.memo_id;
+        memo.createdAt = memo.created_at;
+        memo.updatedAt = memo.updated_at;
+        const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
+        memoList.push(await MemoResDto.makeRes(memo, hashtags));
+      }),
+    );
+    return memoList.sort((a, b) => b.createdAt - a.createdAt);
   }
 
   async getMemoListByBookshelfBook(
@@ -82,34 +73,27 @@ export class MemoService {
     bookshelfBookId: number,
     page: number,
   ) {
-    const resultArray = [];
-    const offset = (page - 1) * 10;
-    const memoList = await this.memoRepository.query(
-      `
-      SELECT * 
-      FROM memo
-      WHERE memo.bookshelf_book_id = ${bookshelfBookId} AND memo.user_id = ${userId} AND memo.deleted_at IS NULL
-      ORDER BY memo.created_at DESC
-      LIMIT 10 OFFSET ${offset};
-      `,
-      //Soft Delete 체크.
+    const memoList = [];
+    const resultArray = await this.memoRepository.getMemoListByBookshelfBookId(
+      userId,
+      bookshelfBookId,
+      (page - 1) * 10,
     );
 
     await Promise.all(
-      memoList.map(async (memo) => {
+      resultArray.map(async (memo) => {
         memo.userId = memo.user_id;
         memo.bookshelfBookId = memo.bookshelf_book_id;
         memo.memoId = memo.memo_id;
         memo.createdAt = memo.created_at;
         memo.updatedAt = memo.updated_at;
-
         const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
 
-        resultArray.push(await MemoResDto.makeRes(memo, hashtags));
+        memoList.push(await MemoResDto.makeRes(memo, hashtags));
       }),
     );
 
-    return resultArray.sort((a, b) => b.createdAt - a.createdAt);
+    return memoList.sort((a, b) => b.createdAt - a.createdAt);
   }
 
   async getHashtagsByMemoId(memoId: number) {
