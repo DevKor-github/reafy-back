@@ -47,25 +47,6 @@ export class StatisticsController {
     }
   }
 
-  /*@ApiOperation({ summary: '월별 얻은 대나무(코인) 수' })
-  @ApiOkResponse({
-    description:
-      '현재 유저가 월 별로 얻은 코인 수를 반환합니다. 세부 사항은 같습니다.',
-    type: MonthlyTotalCoinsListDto,
-    isArray: true,
-  })
-  @Get('/coins')
-  async getMonthlyTotalCoins(@Req() req: Request, @Query('year') year: number) {
-    try {
-      return await this.statisticsService.getMonthlyTotalEarnedCoins(
-        req.user.userId,
-        year,
-      );
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
-  }*/
-
   @ApiOperation({ summary: '월별 총 독서 시간' })
   @ApiOkResponse({
     description:

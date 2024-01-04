@@ -34,6 +34,7 @@ export class HistoryController {
   @ApiOkResponse({
     description: '현재 유저의 독서 기록 목록',
     type: UserBookHistory,
+    isArray: true,
   })
   @Get('/bookshelfbook')
   async getBookshelfBookHistory(@Req() req: Request) {
