@@ -14,7 +14,7 @@ import { join } from 'path';
 import { StatisticsModule } from './statistics/statistics.module';
 import { CoinModule } from './coin/coin.module';
 import { APP_FILTER } from '@nestjs/core';
-import { HttpExceptionFilter } from './common/exception/http-exception.filter';
+import { CustomExceptionFilter } from './common/filter/custom-exception.filter';
 
 @Module({
   imports: [
@@ -45,7 +45,7 @@ import { HttpExceptionFilter } from './common/exception/http-exception.filter';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_FILTER, useClass: CustomExceptionFilter },
   ],
 })
 export class AppModule {}

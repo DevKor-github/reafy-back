@@ -18,6 +18,7 @@ import { JwtSubjectType } from 'src/common/type/authentication.type';
 import { User } from 'src/model/entity/User.entity';
 import axios from 'axios';
 import { CoinService } from 'src/coin/coin.service';
+import { InvalidLoginAccessException } from 'src/common/exception/authentication.exception';
 
 @Injectable()
 export class AuthenticationService {
@@ -26,7 +27,7 @@ export class AuthenticationService {
     private readonly coinService: CoinService,
     private readonly jwtService: JwtService,
     private readonly httpService: HttpService,
-  ) { }
+  ) {}
 
   async login(data: LoginRequest, res): Promise<TokenResponse> {
     try {
@@ -89,7 +90,6 @@ export class AuthenticationService {
 
       this.coinService.createCoin(createdUser.userId);
       return createdUser.oauthId;
-
     } catch (err) {
       console.log(`error : ${err}`);
       throw new InternalServerErrorException();
