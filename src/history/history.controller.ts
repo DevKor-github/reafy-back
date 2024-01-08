@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Req,
-  HttpStatus,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { Request } from 'express';
@@ -38,14 +30,7 @@ export class HistoryController {
   })
   @Get('/bookshelfbook')
   async getBookshelfBookHistory(@Req() req: Request) {
-    try {
-      return {
-        status: 200,
-        response: await this.historyService.getUserBookHistory(req.user.userId),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.historyService.getUserBookHistory(req.user.userId);
   }
   //책 히스토리 만들기 = 독서 기록 만들기
   @ApiOperation({
@@ -61,16 +46,9 @@ export class HistoryController {
     @Req() req: Request, //Guard에서 유저 정보 추출하기
     @Body() createUserBookHistoryDto: CreateUserBookHistoryDto,
   ) {
-    try {
-      return {
-        status: 201,
-        response: await this.historyService.createUserBookHistory(
-          req.user.userId,
-          createUserBookHistoryDto,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.historyService.createUserBookHistory(
+      req.user.userId,
+      createUserBookHistoryDto,
+    );
   }
 }

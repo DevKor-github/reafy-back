@@ -1,10 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Book } from 'src/model/entity/Book.entity';
 import { HttpService } from '@nestjs/axios/dist';
-import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
-import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { BookshelfBookDto } from 'src/book/dto/BookshelfBook.dto';
 import { SearchBookResDto } from 'src/book/dto/SearchBookRes.dto';
 import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';

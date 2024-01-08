@@ -1,7 +1,6 @@
 import { Get, Post, Req, Res, HttpStatus } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Controller } from '@nestjs/common';
-import { Book } from 'src/model/entity/Book.entity';
 import {
   Query,
   Param,
@@ -50,15 +49,7 @@ export class BookController {
     @Query('query') query: string,
     @Query('page') page: number = 1,
   ) {
-    //dto화 필요
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.searchBook(query, page),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.searchBook(query, page);
   }
 
   @ApiOperation({
@@ -75,17 +66,10 @@ export class BookController {
     @Req() req: Request,
     @Body() saveInBookshelfReqDto: SaveInBookshelfReqDto,
   ) {
-    try {
-      return {
-        status: 201,
-        response: await this.bookService.saveInBookshelf(
-          req.user.userId,
-          saveInBookshelfReqDto,
-        ), // userId = 1
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.saveInBookshelf(
+      req.user.userId,
+      saveInBookshelfReqDto,
+    );
   }
 
   @ApiOperation({
@@ -103,17 +87,10 @@ export class BookController {
     @Req() req,
     @Query('progressState') progressState: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getBookshelfBookOnState(
-          req.user.userId,
-          Number(progressState),
-        ),
-      }; //요청 오브젝트에서 user Id 가져오기
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.getBookshelfBookOnState(
+      req.user.userId,
+      Number(progressState),
+    ); //요청 오브젝트에서 user Id 가져오기
   }
 
   @ApiOperation({
@@ -130,17 +107,10 @@ export class BookController {
     @Req() req,
     @Param('bookshelfbookId') bookshelfbookId: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getBookshelfBookDetail(
-          req.user.userId, //userId
-          bookshelfbookId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.getBookshelfBookDetail(
+      req.user.userId, //userId
+      bookshelfbookId,
+    );
   }
 
   @ApiOperation({
@@ -165,18 +135,11 @@ export class BookController {
     @Param('bookshelfbookId') bookshelfbookId: number,
     @Body('progressState') progressState: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.updateBookshelfBook(
-          req.user.userId, //userId
-          bookshelfbookId,
-          progressState,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.updateBookshelfBook(
+      req.user.userId, //userId
+      bookshelfbookId,
+      progressState,
+    );
   }
 
   @ApiOperation({
@@ -193,17 +156,10 @@ export class BookController {
     @Req() req,
     @Param('bookshelfbookId') bookshelfbookId: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.deleteBookshelfBook(
-          req.user.userId, //userId
-          bookshelfbookId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.deleteBookshelfBook(
+      req.user.userId, //userId
+      bookshelfbookId,
+    );
   }
 
   @ApiOperation({
@@ -218,16 +174,7 @@ export class BookController {
   })
   @Get('/favorite')
   async getFavoriteBookshelfBook(@Req() req) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getFavoriteBookshelfBook(
-          req.user.userId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.getFavoriteBookshelfBook(req.user.userId);
   }
 
   @ApiOperation({
@@ -252,17 +199,10 @@ export class BookController {
     @Param('bookshelfbookId') bookshelfbookId: number,
     @Body('isFavorite') isFavorite: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.updateFavoriteBookshelfBook(
-          req.user.userId,
-          bookshelfbookId,
-          isFavorite,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.updateFavoriteBookshelfBook(
+      req.user.userId,
+      bookshelfbookId,
+      isFavorite,
+    );
   }
 }

@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  HttpStatus,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
@@ -16,7 +9,6 @@ import {
 import { StatisticsService } from './statistics.service';
 import { Request } from 'express';
 import {
-  MonthlyTotalCoinsListDto,
   MonthlyTotalPagesListDto,
   MonthlyTotalReadingTimesListDto,
 } from './dtos/Statistics.dto';
@@ -37,14 +29,10 @@ export class StatisticsController {
   })
   @Get('/pages')
   async getMonthlyTotalPages(@Req() req: Request, @Query('year') year: number) {
-    try {
-      return await this.statisticsService.getMonthlyTotalPages(
-        req.user.userId,
-        year,
-      );
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.statisticsService.getMonthlyTotalPages(
+      req.user.userId,
+      year,
+    );
   }
 
   @ApiOperation({ summary: '월별 총 독서 시간' })
@@ -59,13 +47,9 @@ export class StatisticsController {
     @Req() req: Request,
     @Query('year') year: number,
   ) {
-    try {
-      return await this.statisticsService.getMonthlyTotalReadingTimes(
-        req.user.userId,
-        year,
-      );
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.statisticsService.getMonthlyTotalReadingTimes(
+      req.user.userId,
+      year,
+    );
   }
 }
