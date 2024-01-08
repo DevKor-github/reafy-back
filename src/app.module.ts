@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { HttpException, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -13,6 +13,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { StatisticsModule } from './statistics/statistics.module';
 import { CoinModule } from './coin/coin.module';
+import { APP_FILTER } from '@nestjs/core';
+import { HttpExceptionFilter } from './common/exception/http-exception.filter';
 
 @Module({
   imports: [
@@ -41,6 +43,9 @@ import { CoinModule } from './coin/coin.module';
     CoinModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+  ],
 })
 export class AppModule {}
