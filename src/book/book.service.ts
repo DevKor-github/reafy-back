@@ -9,6 +9,12 @@ import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
 import { BookRepository } from './repository/book.repository';
 import { BookShelfRepository } from './repository/bookshelf.repository';
 import { UserBookHistoryRepository } from 'src/history/repository/user-book-history.repository';
+import {
+  AlreadyBookExistException,
+  ApiAccessErrorException,
+  BookNotFoundException,
+  InvalidISBNException,
+} from 'src/common/exception/book-service.exception';
 
 @Injectable()
 export class BookService {
@@ -28,6 +34,7 @@ export class BookService {
     const resultArray = await this.httpService.axiosRef.get(
       `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Cover=Big&Version=20131101&start=${page}`,
     );
+    if (resultArray.data.errorCode) throw ApiAccessErrorException();
     let SearchBookList: SearchBookResDto[] = [];
     await Promise.all(
       resultArray.data.item.map(async (item) => {
@@ -42,6 +49,7 @@ export class BookService {
     const result = await this.httpService.axiosRef.get(
       `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${process.env.ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${isbn13}&Cover=Big&output=js&Version=20131101`,
     );
+    if (result.data.errorCode == 8) throw InvalidISBNException();
     const registeredBook: RegisterBookDto = await RegisterBookDto.makeDto(
       result.data.item[0],
     );
@@ -57,6 +65,8 @@ export class BookService {
       userId,
       progressState,
     );
+
+    if (resultArray.length == 0) throw BookNotFoundException();
 
     const bookshelfBookListOnState: BookshelfBookDto[] = await Promise.all(
       resultArray.map((book) => {
@@ -76,6 +86,8 @@ export class BookService {
       userId,
       bookshelfbookId,
     );
+
+    if (resultArray.length === 0) throw BookNotFoundException();
 
     const firstHistory =
       await this.userBookHistoryRepository.getStartHistory(bookshelfbookId);
@@ -108,7 +120,7 @@ export class BookService {
       });
       if (bookshelfBookExist)
         //책장에 존재 -> Error
-        throw new HttpException('이미 존재하는 책입니다', HttpStatus.CONFLICT);
+        throw AlreadyBookExistException();
 
       const bookshelfInfo = await this.bookshelfRepository.save({
         userId: userId,
@@ -143,9 +155,11 @@ export class BookService {
     bookshelfbookId: number,
     progressState: number,
   ): Promise<BookshelfBookDetailDto> {
-    const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
+    const updatedBookshelfBook = await this.bookshelfRepository.findOne({
       where: { userId: userId, bookshelfBookId: bookshelfbookId },
     });
+
+    if (!updatedBookshelfBook) throw BookNotFoundException();
 
     updatedBookshelfBook.progressState = progressState;
 
@@ -164,6 +178,8 @@ export class BookService {
       bookshelfbookId,
     );
 
+    if (!deletedBookshelfBook) throw BookNotFoundException();
+
     await this.bookshelfRepository.softDelete({
       userId: userId,
       bookshelfBookId: bookshelfbookId,
@@ -174,6 +190,8 @@ export class BookService {
   async getFavoriteBookshelfBook(userId: number): Promise<BookshelfBookDto[]> {
     const resultArray =
       await this.bookRepository.getFavoriteBookshelfBook(userId);
+
+    if (resultArray.length == 0) BookNotFoundException();
 
     const favoriteBookshelfBookList: BookshelfBookDto[] = await Promise.all(
       resultArray.map((book) => {
@@ -192,6 +210,7 @@ export class BookService {
     const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
       where: { userId: userId, bookshelfBookId: bookshelfbookId },
     });
+    if (!updatedBookshelfBook) throw BookNotFoundException();
     updatedBookshelfBook.isFavorite = isFavorite;
     await this.bookshelfRepository.save(updatedBookshelfBook);
     return await this.getBookshelfBookDetail(userId, bookshelfbookId);
