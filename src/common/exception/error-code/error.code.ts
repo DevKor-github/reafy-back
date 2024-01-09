@@ -42,3 +42,9 @@ export const HASHTAG_NOT_FOUND = new ErrorCodeObject(
   404,
   'Requested Hashtag is NOT FOUND',
 );
+
+//HistoryService ErrorCode
+export const HISTORY_NOT_FOUND = new ErrorCodeObject(
+  404,
+  'Requested History is NOT FOUND',
+);

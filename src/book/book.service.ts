@@ -207,7 +207,7 @@ export class BookService {
     bookshelfbookId: number,
     isFavorite: number,
   ): Promise<BookshelfBookDetailDto> {
-    const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
+    const updatedBookshelfBook = await this.bookshelfRepository.findOne({
       where: { userId: userId, bookshelfBookId: bookshelfbookId },
     });
     if (!updatedBookshelfBook) throw BookNotFoundException();
