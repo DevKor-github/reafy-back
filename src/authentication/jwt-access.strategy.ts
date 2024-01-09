@@ -21,7 +21,7 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'access') {
       );
       if (!user) {
         return new UnauthorizedException();
-      }
+      } //Review : userService.findByUserOauthId에서 유저를 찾지 못한다면 예외를 던진다. 지워도 될 것 같다.
 
       return {
         oauthId: user.oauthId,
@@ -29,6 +29,6 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'access') {
       };
     } catch (err) {
       console.log(`err : ${err}}`);
-    }
+    } // try-catch는 마찬가지로 지우는 게 나을 듯.
   }
 }

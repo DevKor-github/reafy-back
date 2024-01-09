@@ -4,14 +4,18 @@ import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
 import { Get } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { User } from 'src/model/entity/User.entity';
-
 
 @ApiTags('Authentication')
 @Controller('authentication')
 export class AuthenticationController {
-  constructor(private readonly authenticationService: AuthenticationService) { }
+  constructor(private readonly authenticationService: AuthenticationService) {}
 
   @ApiOperation({
     summary: '인증 테스트 api',
@@ -24,10 +28,7 @@ export class AuthenticationController {
   @ApiBearerAuth('accessToken')
   @Post('accesstokenTest')
   @UseGuards(AuthGuard('access'))
-  async accesstokenTest(
-    @Res({ passthrough: true }) res,
-    @Req() req
-  ) {
+  async accesstokenTest(@Res({ passthrough: true }) res, @Req() req) {
     return req?.user;
   }
 
@@ -36,7 +37,8 @@ export class AuthenticationController {
     description: 'kakao oauth로 발급 받은 accesstoken 기반 로그인',
   })
   @ApiOkResponse({
-    description: 'kakao accesstoken 기반으로 유저 생성 및 access token 생성 및 refresh token response cookie에 return',
+    description:
+      'kakao accesstoken 기반으로 유저 생성 및 access token 생성 및 refresh token response cookie에 return',
     type: TokenResponse,
   })
   @Post('login')
@@ -46,7 +48,6 @@ export class AuthenticationController {
   ): Promise<TokenResponse> {
     return this.authenticationService.login(data, res);
   }
-  
 
   @ApiOperation({
     summary: 'accesstoken 재발급 api',
@@ -67,7 +68,6 @@ export class AuthenticationController {
       );
     } catch (err) {
       return err;
-    }
+    } //try-catch 제거
   }
-
 }
