@@ -17,7 +17,7 @@ export const INTERNAL_SERVER_ERROR = new ErrorCodeObject(
 //AuthService ErrorCode
 export const VENDOR_NOT_EXIST = new ErrorCodeObject(400, 'Vendor Not Exist');
 
-export const BAD_ACCESS_TOKEN = new ErrorCodeObject(400, 'Bad Access Token');
+export const BAD_ACCESS_TOKEN = new ErrorCodeObject(401, 'Bad Access Token'); //Unauthorized
 
 export const INVALID_REFRESH_TOKEN = new ErrorCodeObject(
   401,

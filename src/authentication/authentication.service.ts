@@ -1,15 +1,10 @@
 import {
-  BadRequestException,
-  HttpException,
   Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
-import { HttpService } from '@nestjs/axios';
 import {
   ACCESS_TOKEN_EXPIRE,
   REFRESH_TOKEN_EXPIRE,
@@ -18,7 +13,8 @@ import { JwtSubjectType } from 'src/common/type/authentication.type';
 import { User } from 'src/model/entity/User.entity';
 import axios from 'axios';
 import { CoinService } from 'src/coin/coin.service';
-import { InvalidLoginAccessException } from 'src/common/exception/authentication.exception';
+import { BadAccessTokenException, InvalidRefreshTokenException, VendorNotExistException } from 'src/common/exception/authentication.exception';
+
 
 @Injectable()
 export class AuthenticationService {
@@ -26,78 +22,64 @@ export class AuthenticationService {
     private readonly userService: UserService,
     private readonly coinService: CoinService,
     private readonly jwtService: JwtService,
-    private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   async login(data: LoginRequest, res): Promise<TokenResponse> {
-    try {
-      let oauthId;
-      switch (data.vendor) {
-        case 'kakao': {
-          oauthId = await this.getUserOauthIdByKakaoAccessToken(
-            data.accessToken,
-          );
-          break;
-        }
-        default: {
-          throw new BadRequestException(); //소셜로그인 선택 실패 예외처리
-        }
+    let oauthId;
+    switch (data.vendor) {
+      case 'kakao': {
+        oauthId = await this.getUserOauthIdByKakaoAccessToken(
+          data.accessToken,
+        );
+        break;
       }
-
-      // accessToken, refreshToken 발급
-      const [accessToken, refreshToken] = await Promise.all([
-        this.generateAccessToken(oauthId),
-        this.generateRefreshToken(oauthId),
-      ]);
-
-      res.cookie('refresh_token', refreshToken, {
-        path: '/auth',
-        httpOnly: true,
-      });
-
-      const user = await this.userService.findByOauthId(oauthId);
-
-      this.userService.updateUser({ ...user, refreshToken: refreshToken });
-
-      return new TokenResponse({ accessToken });
-    } catch (err) {
-      console.log(err);
-      throw new InternalServerErrorException();
+      default: {
+        throw VendorNotExistException(); //소셜로그인 선택 실패 예외처리
+      }
     }
+
+    // accessToken, refreshToken 발급
+    const [accessToken, refreshToken] = await Promise.all([
+      this.generateAccessToken(oauthId),
+      this.generateRefreshToken(oauthId),
+    ]);
+
+    res.cookie('refresh_token', refreshToken, {
+      path: '/auth',
+      httpOnly: true,
+    });
+
+    const user = await this.userService.findByOauthId(oauthId);
+
+    this.userService.updateUser({ ...user, refreshToken: refreshToken });
+
+    return new TokenResponse({ accessToken });
   }
-  /*
-  마찬가지로 try-catch를 삭제하는 것이 좋을 것 같다.
-  글로벌 필터가 구현되어있기에 internalServerException은 자동으로 잡을 수가 있다.
-  */
 
   async getUserOauthIdByKakaoAccessToken(accessToken: string): Promise<string> {
     // KAKAO LOGIN 회원조회 REST-API
-    try {
-      const user: any = await axios.get('https://kapi.kakao.com/v2/user/me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+    const user: any = await axios.get('https://kapi.kakao.com/v2/user/me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
-      if (!user) throw new UnauthorizedException(); //카카오 로그인 실패 예외처리
-      const kakaoId = user?.data?.id;
+    if (!user) throw BadAccessTokenException(); //카카오 로그인 실패 예외처리
+    const kakaoId = user?.data?.id;
 
-      const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
+    const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
 
-      if (oauthId) return oauthId;
+    if (oauthId) return oauthId;
 
-      // 회원이 없으면 회원가입 후 아이디 반환
-      const createdUser: User = await this.userService.createUser({
-        oauthId: kakaoId,
-        vender: 'kakao',
-      });
+    // 회원이 없으면 회원가입 후 아이디 반환
+    const createdUser: User = await this.userService.createUser({
+      oauthId: kakaoId,
+      vender: 'kakao',
+    });
 
-      this.coinService.createCoin(createdUser.userId);
-      return createdUser.oauthId;
-    } catch (err) {
-      console.log(`error : ${err}`);
-      throw new InternalServerErrorException();
-    }
+    this.coinService.createCoin(createdUser.userId);
+    return createdUser.oauthId;
+
   }
 
   /* Review
@@ -139,11 +121,9 @@ export class AuthenticationService {
 
   async refreshJWT(id: number, refreshToken: string): Promise<TokenResponse> {
     const user = await this.userService.findByOauthId(id.toString());
-    if (!user) throw new UnauthorizedException('존재하지 않는 유저입니다.');
-    // Review : 어차피 userService.findByOauthId에서 유저가 존재하지 않으면 예외를 던진다. 지워도 될 것 같다.
 
     if (user.refreshToken !== refreshToken)
-      throw new UnauthorizedException('invalid refresh token');
+      throw InvalidRefreshTokenException();
 
     const accessToken = await this.generateAccessToken(user.oauthId);
     return new TokenResponse({ accessToken });

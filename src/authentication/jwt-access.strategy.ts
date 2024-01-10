@@ -15,20 +15,13 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'access') {
   }
 
   async validate(payload) {
-    try {
-      const user = await this.authenticationService.tokenValidate(
-        payload?.oauthId,
-      );
-      if (!user) {
-        return new UnauthorizedException();
-      } //Review : userService.findByUserOauthId에서 유저를 찾지 못한다면 예외를 던진다. 지워도 될 것 같다.
+    const user = await this.authenticationService.tokenValidate(
+      payload?.oauthId,
+    );
 
-      return {
-        oauthId: user.oauthId,
-        userId: user.userId,
-      };
-    } catch (err) {
-      console.log(`err : ${err}}`);
-    } // try-catch는 마찬가지로 지우는 게 나을 듯.
+    return {
+      oauthId: user.oauthId,
+      userId: user.userId,
+    };
   }
 }
