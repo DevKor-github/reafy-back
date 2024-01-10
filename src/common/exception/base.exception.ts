@@ -15,6 +15,6 @@ export class BaseException extends Error {
   return new BaseException(INVALID_LOGIN_ACCESS, message);
 };*/
 
-export function UncatchedException(message?: string): BaseException {
+export function InternalServerException(message?: string): BaseException {
   return new BaseException(INTERNAL_SERVER_ERROR, message);
 }
