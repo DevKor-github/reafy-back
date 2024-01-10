@@ -6,7 +6,7 @@ import { CustomExceptionFilter } from './common/filter/custom-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalFilters(new CustomExceptionFilter());
+  app.useGlobalFilters(new CustomExceptionFilter()); // todo app.module.ts에서와 중복 제거 가능해보임
   app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()
