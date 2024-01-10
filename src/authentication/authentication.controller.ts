@@ -15,7 +15,7 @@ import { User } from 'src/model/entity/User.entity';
 @ApiTags('Authentication')
 @Controller('authentication')
 export class AuthenticationController {
-  constructor(private readonly authenticationService: AuthenticationService) {}
+  constructor(private readonly authenticationService: AuthenticationService) { }
 
   @ApiOperation({
     summary: '인증 테스트 api',
@@ -61,13 +61,9 @@ export class AuthenticationController {
   @Post('refresh')
   @UseGuards(AuthGuard('refresh'))
   async refresh(@Req() req: any): Promise<TokenResponse> {
-    try {
-      return await this.authenticationService.refreshJWT(
-        req.user.oauthId,
-        req.user.refreshToken,
-      );
-    } catch (err) {
-      return err;
-    } //try-catch 제거
+    return await this.authenticationService.refreshJWT(
+      req.user.oauthId,
+      req.user.refreshToken,
+    );
   }
 }
