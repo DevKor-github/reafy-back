@@ -22,7 +22,7 @@ export class UserService {
     // 유저 닉네임, 이름 등 설정 시 해당 내용 검증
     // await this.validateUsername(data.username);
 
-    if (!data.oauthId || !data.userId) UserNotFoundException();
+    if (!data.oauthId || !data.userId) throw UserNotFoundException();
 
     return await this.userRepository.create(data);
   }
@@ -30,7 +30,7 @@ export class UserService {
   async findByOauthId(oauthId: string): Promise<User> {
     const user = this.userRepository.findUserByOauthId(oauthId);
 
-    if (!user) UserNotFoundException();
+    if (!user) throw UserNotFoundException();
     return user;
   }
 }

@@ -1,5 +1,5 @@
 import {
-  Injectable,
+  Injectable, InternalServerErrorException,
 } from '@nestjs/common';
 import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
@@ -14,6 +14,7 @@ import { User } from 'src/model/entity/User.entity';
 import axios from 'axios';
 import { CoinService } from 'src/coin/coin.service';
 import { BadAccessTokenException, InvalidRefreshTokenException, VendorNotExistException } from 'src/common/exception/authentication.exception';
+import { InternalServerException } from 'src/common/exception/base.exception';
 
 
 @Injectable()
@@ -58,13 +59,18 @@ export class AuthenticationService {
 
   async getUserOauthIdByKakaoAccessToken(accessToken: string): Promise<string> {
     // KAKAO LOGIN 회원조회 REST-API
-    const user: any = await axios.get('https://kapi.kakao.com/v2/user/me', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    let user;
+    try{
+      user = await axios.get('https://kapi.kakao.com/v2/user/me', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });  
+    }catch(err){
+      if(err?.response?.data?.code === -401) throw BadAccessTokenException();
+      throw InternalServerException();
+    }
 
-    if (!user) throw BadAccessTokenException(); //카카오 로그인 실패 예외처리
     const kakaoId = user?.data?.id;
 
     const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
