@@ -1,10 +1,10 @@
-import { Hashtag } from './../../model/entity/Hashtag.entity';
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
+import { Hashtag } from './../../model/entity/Hashtag.entity';
 
 @Injectable()
 export class HashtagRepository extends Repository<Hashtag> {
-  constructor(private dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(Hashtag, dataSource.createEntityManager());
   }
 }

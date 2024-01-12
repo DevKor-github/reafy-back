@@ -4,7 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class MemoHashtagRepository extends Repository<MemoHashtag> {
-  constructor(private dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(MemoHashtag, dataSource.createEntityManager());
   }
 

@@ -4,7 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class MemoRepository extends Repository<Memo> {
-  constructor(private dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(Memo, dataSource.createEntityManager());
   }
   async getMemoListById(userId: number, page: number) {

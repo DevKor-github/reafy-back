@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Book } from 'src/model/entity/Book.entity';
-import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
-import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { DataSource, Repository } from 'typeorm';
-import { RegisterBookDto } from '../dto/RegisterBook.dto';
 
 @Injectable()
 export class BookRepository extends Repository<Book> {
-  constructor(private dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(Book, dataSource.createEntityManager());
   }
 
