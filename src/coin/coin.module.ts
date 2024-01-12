@@ -3,7 +3,7 @@ import { CoinController } from './coin.controller';
 import { CoinService } from './coin.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Coin } from 'src/model/entity/Coin.entity';
-import { CoinRepository } from './coin.repository';
+import { CoinRepository } from './repository/coin.repository';
 
 @Module({
   controllers: [CoinController],

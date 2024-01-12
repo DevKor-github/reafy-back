@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { CoinRepository } from './coin.repository';
-import { CoinDto } from './dto/coin.dto';
 import { Coin } from 'src/model/entity/Coin.entity';
+import { CoinRepository } from './repository/coin.repository';
+import { CoinDto } from './dto/coin.dto';
 
 @Injectable()
 export class CoinService {
     constructor(private readonly coinRepository: CoinRepository) { }
 
     async getCoin(userId: number): Promise<CoinDto> {
-        const currentCoin: Coin = await this.coinRepository.getUserCoin(userId);
+        const currentCoin: Coin = await this.coinRepository.findOne({
+            where: { userId: userId },
+        });
         return new CoinDto().setDataByUserItemEntity(currentCoin);
     }
 
@@ -16,7 +18,7 @@ export class CoinService {
         let coin: Coin = new Coin();
         coin.userId = userId;
         coin.totalCoin = 0;
-        const currentCoin = await this.coinRepository.create(coin);
+        const currentCoin = await this.coinRepository.save(coin);
         return new CoinDto().setDataByUserItemEntity(currentCoin);
     }
 
