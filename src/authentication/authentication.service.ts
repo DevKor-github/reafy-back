@@ -60,14 +60,14 @@ export class AuthenticationService {
   async getUserOauthIdByKakaoAccessToken(accessToken: string): Promise<string> {
     // KAKAO LOGIN 회원조회 REST-API
     let user;
-    try{
+    try {
       user = await axios.get('https://kapi.kakao.com/v2/user/me', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      });  
-    }catch(err){
-      if(err?.response?.data?.code === -401) throw BadAccessTokenException();
+      });
+    } catch (err) {
+      if (err?.response?.data?.code === -401) throw BadAccessTokenException();
       throw InternalServerException();
     }
 
@@ -134,4 +134,12 @@ export class AuthenticationService {
     const accessToken = await this.generateAccessToken(user.oauthId);
     return new TokenResponse({ accessToken });
   }
+
+  async logout(id: number) {
+    const user = await this.userService.findByOauthId(id.toString());
+    user.refreshToken = "";
+    await this.userService.updateUser(user);
+    return true;
+  }
+
 }
