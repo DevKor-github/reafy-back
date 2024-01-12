@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Coin } from 'src/model/entity/Coin.entity';
-import { CoinRepository } from './repository/coin.repository';
 import { CoinDto } from './dto/coin.dto';
+import { CoinRepository } from './repository/coin.repository';
 
 @Injectable()
 export class CoinService {

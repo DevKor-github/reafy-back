@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CoinDto } from './dto/coin.dto';
-import { CoinService } from './coin.service';
-import { CoinReqDto } from './dto/coinReq.dto';
+import { Body, Controller, Get, Put, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CoinService } from './coin.service';
+import { CoinDto } from './dto/coin.dto';
+import { CoinReqDto } from './dto/coinReq.dto';
 
 @ApiTags("Coin")
 @UseGuards(AuthGuard('access'))
@@ -25,7 +25,6 @@ export class CoinController {
     async getCoin(
         @Req() req,
     ): Promise<CoinDto> {
-        console.log(req.user)
         const userId = req.user.userId;
         return await this.coinService.getCoin(userId);
     }
@@ -47,11 +46,11 @@ export class CoinController {
     ): Promise<CoinDto> {
         const userId = req.user.userId;
 
-        let updatedCoin;
+        let updatedCoin: CoinDto;
         if (coinReqDto.isPlus) {
-            updatedCoin = this.coinService.addCoin(userId, coinReqDto.coin);
+            updatedCoin = await this.coinService.addCoin(userId, coinReqDto.coin);
         } else {
-            updatedCoin = this.coinService.useCoin(userId, coinReqDto.coin);
+            updatedCoin = await this.coinService.useCoin(userId, coinReqDto.coin);
         }
 
         return updatedCoin;
