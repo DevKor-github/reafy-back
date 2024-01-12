@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { User } from 'src/model/entity/User.entity';
-import { UserRepository } from './user.repository';
-import { CreateUserDto } from './dtos/CreateUser.dto';
 import { UserNotFoundException } from 'src/common/exception/user-service.exception';
+import { User } from 'src/model/entity/User.entity';
+import { CreateUserDto } from './dtos/CreateUser.dto';
+import { UserRepository } from './repository/user.repository';
 
 @Injectable()
 export class UserService {
@@ -15,7 +15,7 @@ export class UserService {
     newUser.oauthId = data.oauthId;
     newUser.vender = data.vender;
 
-    await this.userRepository.create(newUser);
+    await this.userRepository.save(newUser);
     return newUser;
   }
   async updateUser(data: User): Promise<User> {
@@ -24,11 +24,13 @@ export class UserService {
 
     if (!data.oauthId || !data.userId) throw UserNotFoundException();
 
-    return await this.userRepository.create(data);
+    return await this.userRepository.save(data);
   }
 
   async findByOauthId(oauthId: string): Promise<User> {
-    const user = this.userRepository.findUserByOauthId(oauthId);
+    const user = await this.userRepository.findOne({
+      where: { oauthId: oauthId },
+    });
 
     if (!user) throw UserNotFoundException();
     return user;
