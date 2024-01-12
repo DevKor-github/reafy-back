@@ -1,6 +1,6 @@
 import { ErrorCode, INTERNAL_SERVER_ERROR } from './error-code/error.code';
 
-export class BaseException extends Error {
+export class BaseException extends Error { 
   readonly errorCode: ErrorCode;
 
   constructor(errorCode: ErrorCode, message?: string) {
@@ -15,6 +15,7 @@ export class BaseException extends Error {
   return new BaseException(INVALID_LOGIN_ACCESS, message);
 };*/
 
-export function UncatchedException(message?: string): BaseException {
+// filter에서 뿐만 아니라 다른 service에서도 해당 함수를 사용할 수 있게 이름 변경
+export function InternalServerException(message?: string): BaseException {
   return new BaseException(INTERNAL_SERVER_ERROR, message);
 }
