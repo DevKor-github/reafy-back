@@ -66,4 +66,20 @@ export class AuthenticationController {
       req.user.refreshToken,
     );
   }
+
+  @ApiOperation({
+    summary: 'logout용 api',
+    description: 'logout 요청 시 refreshtoken 삭제',
+  })
+  @ApiOkResponse({
+    description: 'logout 성공 여부 return',
+    type: Boolean,
+  })
+  @ApiBearerAuth('accessToken')
+  @Post('logout')
+  @UseGuards(AuthGuard('refresh'))
+  async logout(@Req() req: any): Promise<Boolean> {
+    return await this.authenticationService.logout(req.user.oauthId);
+
+  }
 }
