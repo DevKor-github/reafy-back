@@ -19,6 +19,8 @@ export class StatisticsService {
     const resultArray =
       await this.userBookHistoryRepository.getMonthlyTotalPages(userId, year);
 
+    //독서 기록 유무 상관없이 그 해의 모든 총 페이지 수 반환. 없으면 0으로 뜰 것
+
     await Promise.all(
       resultArray.map((resultPacket) => {
         monthlyTotalPagesList.push(
@@ -40,6 +42,8 @@ export class StatisticsService {
         userId,
         year,
       );
+
+    //독서 기록 유무 상관없이 그 해의 모든 총 독서 시간 반환. 없으면 0으로 뜰 것
     await Promise.all(
       resultArray.map((resultPacket) => {
         monthlyTotalReadingTimesList.push(

@@ -6,6 +6,10 @@ import { MemoRepository } from './repository/memo.repository';
 import { MemoHashtagRepository } from './repository/memo-hashtag.repository';
 import { HashtagRepository } from './repository/hashtag.repository';
 import { Hashtag } from 'src/model/entity/Hashtag.entity';
+import {
+  HashtagNotFoundException,
+  MemoNotFoundException,
+} from 'src/common/exception/memo-service.exception';
 
 @Injectable()
 export class MemoService {
@@ -18,7 +22,7 @@ export class MemoService {
   async getMemoList(userId: number, page: number): Promise<MemoResDto[]> {
     const memoList = [];
     const resultArray = await this.memoRepository.getMemoListById(userId, page);
-
+    if (resultArray.length == 0) throw MemoNotFoundException();
     await Promise.all(
       resultArray.map(async (memo) => {
         const hashtags = await this.getHashtagsByMemoId(memo.memoId);
@@ -53,11 +57,13 @@ export class MemoService {
     const selectedHashtag = await this.hashtagRepository.findOne({
       where: { keyword: hashtag },
     });
+    if (!selectedHashtag) throw HashtagNotFoundException();
     const resultArray = await this.memoHashtagRepository.getMemoListByHashtag(
       userId,
       selectedHashtag.hashtagId,
       (page - 1) * 10,
     );
+    if (resultArray.length == 0) throw MemoNotFoundException();
     return await this.processMemoList(resultArray);
   }
 
@@ -71,6 +77,7 @@ export class MemoService {
       bookshelfBookId,
       (page - 1) * 10,
     );
+    if (resultArray.length == 0) throw MemoNotFoundException();
 
     return await this.processMemoList(resultArray);
   }
@@ -95,6 +102,7 @@ export class MemoService {
         memoId: memoId,
       },
     });
+    if (!memo) throw MemoNotFoundException();
 
     const hashtags = await this.getHashtagsByMemoId(memoId);
 
@@ -160,6 +168,8 @@ export class MemoService {
       where: { memoId: memoId },
     });
 
+    if (!existingMemo) throw MemoNotFoundException();
+
     existingMemo.content = content;
     existingMemo.page = page;
     existingMemo.imageURL = file ? file.path : null;
@@ -186,7 +196,11 @@ export class MemoService {
   }
 
   async deleteMemo(userId: number, memoId: number): Promise<string> {
+    const deletedMemo = await this.memoRepository.findOne({
+      where: { memoId: memoId, userId: userId },
+    });
+    if (!deletedMemo) throw MemoNotFoundException(); //Error;
     await this.memoRepository.softDelete({ memoId: memoId, userId: userId });
-    return `memo ${memoId} is deleted successfully`;
+    return `memoId : ${memoId} is deleted successfully`;
   }
 }

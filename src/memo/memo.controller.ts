@@ -1,11 +1,9 @@
 import {
   Controller,
   Req,
-  HttpStatus,
   Get,
   Post,
   Body,
-  UseInterceptors,
   UploadedFile,
   UseGuards,
   Delete,
@@ -16,11 +14,9 @@ import {
 import { MemoService } from './memo.service';
 import { Request } from 'express';
 import { CreateMemoDto } from './dtos/CreateMemo.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
-  ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -52,17 +48,7 @@ export class MemoController {
   })
   @Get('')
   async getMemoList(@Req() req: Request, @Query('page') page: number) {
-    try {
-      return {
-        status: 200,
-        response: await this.memoService.getMemoList(
-          req.user.userId,
-          Number(page),
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.memoService.getMemoList(req.user.userId, Number(page));
   }
   /*
   특정 해시태그를 쿼리로 입력하여 해당하는 메모들을 가져옵니다.
@@ -80,18 +66,11 @@ export class MemoController {
     @Query('hashtag') hashtag: string,
     @Query('page') page: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.memoService.getMemoListByHashtag(
-          req.user.userId,
-          hashtag,
-          Number(page),
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.memoService.getMemoListByHashtag(
+      req.user.userId,
+      hashtag,
+      Number(page),
+    );
   }
   /*
   특정 bookshelfbookId를 받아서 해당 책에 작성된 메모를 가져옵니다.
@@ -109,18 +88,11 @@ export class MemoController {
     @Query('bookshelfBookId') bookshelfBookId: number,
     @Query('page') page: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.memoService.getMemoListByBookshelfBook(
-          req.user.userId,
-          bookshelfBookId,
-          Number(page),
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.memoService.getMemoListByBookshelfBook(
+      req.user.userId,
+      bookshelfBookId,
+      Number(page),
+    );
   }
   /*
   form-data 형태로 작성을 받습니다.
@@ -142,18 +114,11 @@ export class MemoController {
     @Body() createMemoDto: CreateMemoDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    try {
-      return {
-        status: 201,
-        response: await this.memoService.createMemo(
-          req.user.userId,
-          createMemoDto,
-          file,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.memoService.createMemo(
+      req.user.userId,
+      createMemoDto,
+      file,
+    );
   }
   /*
   특정 id의 모든 정보를 가져옵니다.
@@ -164,14 +129,7 @@ export class MemoController {
   })
   @Get('/:memoId')
   async getMemoDetail(@Req() req: Request, @Param('memoId') memoId: number) {
-    try {
-      return {
-        status: 200,
-        response: await this.memoService.getMemoDetail(req.user.userId, memoId),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.memoService.getMemoDetail(req.user.userId, memoId);
   }
   /*
   Param으로 id를 받고 메모를 수정합니다.
@@ -195,19 +153,12 @@ export class MemoController {
     @Param('memoId') memoId: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.memoService.updateMemo(
-          req.user.userId,
-          memoId,
-          updateMemoDto,
-          file,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.memoService.updateMemo(
+      req.user.userId,
+      memoId,
+      updateMemoDto,
+      file,
+    );
   }
   /*
   특정 id의 메모를 삭제합니다.
@@ -216,13 +167,6 @@ export class MemoController {
   @ApiOkResponse({ description: '특정 메모를 삭제합니다.' })
   @Delete('/:memoId')
   async deleteMemo(@Req() req: Request, @Param('memoId') memoId: number) {
-    try {
-      return {
-        status: 200,
-        response: await this.memoService.deleteMemo(req.user.userId, memoId),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.memoService.deleteMemo(req.user.userId, memoId);
   }
 }
