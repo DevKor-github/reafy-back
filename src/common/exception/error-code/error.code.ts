@@ -1,6 +1,12 @@
 import { HttpStatus } from "@nestjs/common";
 
-class ErrorCodeObject {
+export interface ErrorCode {
+  status : number;
+  message: string;
+  errorCode?: string;
+}
+
+class ErrorCodeObject implements ErrorCode {
   readonly status: number;
   readonly message: string;
   readonly errorCode?: string;
@@ -22,10 +28,6 @@ enum ErrorCodeEnum {
   UNAUTHORIZED_USER = "0104",
   USER_NOT_FOUND = "0105",
 }
-
-// interface 따로 정의
-// https://medium.com/humanscape-tech/type-vs-interface-%EC%96%B8%EC%A0%9C-%EC%96%B4%EB%96%BB%EA%B2%8C-f36499b0de50
-export type ErrorCode = ErrorCodeObject;
 
 export const INTERNAL_SERVER_ERROR = new ErrorCodeObject(
   HttpStatus.INTERNAL_SERVER_ERROR,
