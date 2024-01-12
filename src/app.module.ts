@@ -43,9 +43,6 @@ import { CustomExceptionFilter } from './common/filter/custom-exception.filter';
     CoinModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    { provide: APP_FILTER, useClass: CustomExceptionFilter },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}
