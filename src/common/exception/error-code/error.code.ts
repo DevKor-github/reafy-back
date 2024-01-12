@@ -3,12 +3,12 @@ import { HttpStatus } from "@nestjs/common";
 class ErrorCodeObject {
   readonly status: number;
   readonly message: string;
-  readonly errorCoede?: string;
+  readonly errorCode?: string;
 
-  constructor(status: number, message: string, erroCode?: string) {
+  constructor(status: number, message: string, errorCode?: string) {
     this.status = status;
     this.message = message;
-    this.errorCoede = erroCode;
+    this.errorCode = errorCode;
   }
 }
 
