@@ -1,8 +1,4 @@
 import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { AuthenticationService } from './authentication.service';
-import { LoginRequest } from './dto/LoginRequest.dto';
-import { TokenResponse } from './dto/TokenResponse.dto';
-import { Get } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
@@ -11,6 +7,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { User } from 'src/model/entity/User.entity';
+import { AuthenticationService } from './authentication.service';
+import { LoginRequest } from './dto/LoginRequest.dto';
+import { TokenResponse } from './dto/TokenResponse.dto';
 
 @ApiTags('Authentication')
 @Controller('authentication')

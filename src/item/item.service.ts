@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { UserItemRepository } from './userItem.repository';
+import { CoinService } from 'src/coin/coin.service';
 import { UserItem } from 'src/model/entity/UserItem.entity';
-import { Repository } from 'typeorm';
 import { ItemDto } from './dto/item.dto';
 import { ItemReqDto } from './dto/itemReq.dto';
-import { CoinService } from 'src/coin/coin.service';
+import { UserItemRepository } from './repository/userItem.repository';
 
 @Injectable()
 export class ItemService {
@@ -15,7 +14,9 @@ export class ItemService {
     ) { }
 
     async getItemList(userId: number): Promise<ItemDto[]> {
-        const userItemList = await this.userItemRepository.getUserItemList(userId);
+        const userItemList = await this.userItemRepository.find({
+            where: { userId: userId },
+        });
 
         let itemDtoList: Array<ItemDto> = [];
 
@@ -31,14 +32,17 @@ export class ItemService {
     async buyItem(userId: number, itemReqDto: ItemReqDto): Promise<ItemDto> {
         let requestItem: UserItem = this.toUserItemEntity(itemReqDto, userId); // todo activation ture of false ?
 
-        let item: UserItem = await this.userItemRepository.getUserItem(userId, itemReqDto.itemId);
+        let item: UserItem = await this.userItemRepository.findOne({
+            where: { userId: userId, itemId: itemReqDto.itemId },
+        });
+
         if (item) {
             item.activation = itemReqDto.activation;
             requestItem = item;
         }
 
         await this.coinService.useCoin(userId, itemReqDto.price);
-        const savedItem = await this.userItemRepository.create(requestItem);
+        const savedItem = await this.userItemRepository.save(requestItem);
         return new ItemDto().setDataByUserItemEntity(savedItem);
     }
 
