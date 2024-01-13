@@ -11,12 +11,8 @@ export class CoinRepository extends Repository<Coin> {
     }
 
     async plusCoin(userId: number, coin: number): Promise<Coin> {
-        let currentCoin: Coin = await this.findOne({
-            where: { userId: userId },
-        });
-
-        currentCoin.totalCoin += coin;
-        return await this.save(currentCoin);
+        await this.increment({ userId: userId }, "totalCoin", coin);
+        return await this.findOne({where : { userId: userId }});
     }
 
     async minusCoin(userId: number, coin: number): Promise<Coin> {
