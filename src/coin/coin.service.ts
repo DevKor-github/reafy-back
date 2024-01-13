@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { NotEnoughCoinException } from 'src/common/exception/coin-service.exception';
 import { Coin } from 'src/model/entity/Coin.entity';
 import { CoinDto } from './dto/coin.dto';
 import { CoinRepository } from './repository/coin.repository';
@@ -29,8 +30,22 @@ export class CoinService {
 
 
     async useCoin(userId: number, usedCoin: number): Promise<CoinDto> {
-        const remainCoin: Coin = await this.coinRepository.minusCoin(userId, usedCoin);
+        const remainCoin: Coin = await this.minusCoin(userId, usedCoin);
         return new CoinDto().setDataByUserItemEntity(remainCoin);
+    }
+
+    async minusCoin(userId, coin): Promise<Coin> {
+        let currentCoin: Coin = await this.coinRepository.findOne({
+            where: { userId: userId },
+        });
+        
+        const remainCoin: number = currentCoin.totalCoin - coin;
+        if (remainCoin < 0) {
+            throw NotEnoughCoinException();
+        }
+
+        currentCoin.totalCoin = remainCoin;
+        return await this.coinRepository.save(currentCoin);
     }
 
 }
