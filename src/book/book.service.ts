@@ -66,7 +66,7 @@ export class BookService {
       progressState,
     );
 
-    if (resultArray.length == 0) throw BookNotFoundException();
+    //if (resultArray.length == 0) throw BookNotFoundException();
 
     const bookshelfBookListOnState: BookshelfBookDto[] = await Promise.all(
       resultArray.map((book) => {
@@ -87,7 +87,7 @@ export class BookService {
       bookshelfbookId,
     );
 
-    if (resultArray.length === 0) throw BookNotFoundException();
+    //if (resultArray.length === 0) throw BookNotFoundException();
 
     const firstHistory =
       await this.userBookHistoryRepository.getStartHistory(bookshelfbookId);
