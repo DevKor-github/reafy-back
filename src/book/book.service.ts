@@ -69,10 +69,10 @@ export class BookService {
       progressState,
     );
 
-    if (resultArray.length == 0) {
-      this.logger.error(`## can not find book list userId : ${userId}, progressState : ${progressState}`);
-      throw BookNotFoundException();
-    }
+    // if (resultArray.length == 0) {
+    //   this.logger.error(`## can not find book list userId : ${userId}, progressState : ${progressState}`);
+    //   throw BookNotFoundException();
+    // }
 
     const bookshelfBookListOnState: BookshelfBookDto[] =
       resultArray.map((book) => {
@@ -92,10 +92,10 @@ export class BookService {
       bookshelfbookId,
     );
 
-    if (resultArray.length === 0) {
-      this.logger.error(`## can not find book list userId : ${userId}, bookshelfbookId : ${bookshelfbookId}`);
-      throw BookNotFoundException();
-    }
+    // if (resultArray.length === 0) {
+    //   this.logger.error(`## can not find book list userId : ${userId}, bookshelfbookId : ${bookshelfbookId}`);
+    //   throw BookNotFoundException();
+    // }
 
     const firstHistory =
       await this.userBookHistoryRepository.getStartHistory(bookshelfbookId);
