@@ -1,14 +1,17 @@
+import { LoggerService, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { AppModule } from './app.module';
 import { CustomExceptionFilter } from './common/filter/custom-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
   app.useGlobalFilters(new CustomExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
-
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   const config = new DocumentBuilder()
     .setTitle('Reafy API')
     .setDescription('Reafy API specification. 모든 시간은 UTC 기준입니다.')
