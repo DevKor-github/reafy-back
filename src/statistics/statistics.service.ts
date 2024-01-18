@@ -60,6 +60,6 @@ export class StatisticsService {
     const queryPacket =
       await this.userBookHistoryRepository.getTodayStatistics(userId);
     console.log(queryPacket);
-    return await TodayStatisticsDto.makeRes(queryPacket[0]);
+    return TodayStatisticsDto.makeRes(queryPacket[0]);
   }
 }
