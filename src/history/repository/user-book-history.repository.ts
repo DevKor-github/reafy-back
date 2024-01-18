@@ -27,6 +27,14 @@ export class UserBookHistoryRepository extends Repository<UserBookHistory> {
     `);
   }
 
+  async getTodayStatistics(userId: number) {
+    return await this.query(`
+    SELECT user_id, DATE_FORMAT(created_at, '%Y-%m-%d') as date, SUM(end_page-start_page) as today_pages, SUM(duration) as today_reading_times
+    FROM user_book_history 
+    WHERE user_id = ${userId} AND DATE(created_at) = CURDATE();
+    `);
+  }
+
   async getStartHistory(bookshelfBookId: number) {
     return await this.findOne({
       where: { bookshelfBookId: bookshelfBookId },

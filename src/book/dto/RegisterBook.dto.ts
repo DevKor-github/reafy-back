@@ -38,7 +38,7 @@ export class RegisterBookDto {
   link: string;
 
   @ApiOperation({ description: '내부 응답 생성 함수' })
-  static async makeDto(data: any) {
+  static makeDto(data: any) {
     const dtoData: RegisterBookDto = {
       isbn13: data.isbn13,
       title: data.title,

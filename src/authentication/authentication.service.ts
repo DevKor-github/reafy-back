@@ -1,5 +1,7 @@
 import {
-  Injectable
+  Inject,
+  Injectable,
+  LoggerService
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
@@ -15,6 +17,7 @@ import { User } from 'src/model/entity/User.entity';
 import { UserService } from 'src/user/user.service';
 import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 
 @Injectable()
@@ -23,6 +26,7 @@ export class AuthenticationService {
     private readonly userService: UserService,
     private readonly coinService: CoinService,
     private readonly jwtService: JwtService,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService,
   ) { }
 
   async login(data: LoginRequest, res): Promise<TokenResponse> {
@@ -35,6 +39,7 @@ export class AuthenticationService {
         break;
       }
       default: {
+        this.logger.error("invalid social login");
         throw VendorNotExistException(); //소셜로그인 선택 실패 예외처리
       }
     }
@@ -67,6 +72,7 @@ export class AuthenticationService {
         },
       });
     } catch (err) {
+      this.logger.error(`\n## Fail to get kakao user info , accessToken : ${accessToken}`, {}, err.stack);
       if (err?.response?.data?.code === -401) throw BadAccessTokenException();
       throw InternalServerException();
     }
@@ -111,8 +117,11 @@ export class AuthenticationService {
   async refreshJWT(id: number, refreshToken: string): Promise<TokenResponse> {
     const user = await this.userService.findByOauthId(id.toString());
 
-    if (user.refreshToken !== refreshToken)
+    if (user.refreshToken !== refreshToken) {
+
+      this.logger.error(`\n## Invalid refreshToken , requsrt refreshToken : ${refreshToken}, user refreshToken : ${user.refreshToken}`);
       throw InvalidRefreshTokenException();
+    }
 
     const accessToken = await this.generateAccessToken(user.oauthId);
     return new TokenResponse({ accessToken });

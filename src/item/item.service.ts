@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { CoinService } from 'src/coin/coin.service';
 import { UserItem } from 'src/model/entity/UserItem.entity';
 import { ItemDto } from './dto/item.dto';
@@ -10,6 +11,7 @@ export class ItemService {
     constructor(
         private readonly userItemRepository: UserItemRepository,
         private readonly coinService: CoinService,
+        @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
 
     ) { }
 

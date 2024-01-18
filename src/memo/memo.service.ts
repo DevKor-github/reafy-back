@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { CreateMemoDto } from './dtos/CreateMemo.dto';
 import { UpdateMemoDto } from './dtos/UpdateMemo.dto';
 import { MemoResDto } from './dtos/MemoRes.dto';
@@ -10,6 +10,7 @@ import {
   HashtagNotFoundException,
   MemoNotFoundException,
 } from 'src/common/exception/memo-service.exception';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class MemoService {
@@ -17,6 +18,7 @@ export class MemoService {
     private readonly memoRepository: MemoRepository,
     private readonly memoHashtagRepository: MemoHashtagRepository,
     private readonly hashtagRepository: HashtagRepository,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
   ) {}
 
   async getMemoList(userId: number, page: number): Promise<MemoResDto[]> {
