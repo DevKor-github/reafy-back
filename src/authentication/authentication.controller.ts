@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Inject, LoggerService, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
@@ -6,6 +6,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { User } from 'src/model/entity/User.entity';
 import { AuthenticationService } from './authentication.service';
 import { LoginRequest } from './dto/LoginRequest.dto';
@@ -14,7 +15,8 @@ import { TokenResponse } from './dto/TokenResponse.dto';
 @ApiTags('Authentication')
 @Controller('authentication')
 export class AuthenticationController {
-  constructor(private readonly authenticationService: AuthenticationService) { }
+  constructor(private readonly authenticationService: AuthenticationService,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService) { }
 
   @ApiOperation({
     summary: '인증 테스트 api',
@@ -28,6 +30,10 @@ export class AuthenticationController {
   @Post('accesstokenTest')
   @UseGuards(AuthGuard('access'))
   async accesstokenTest(@Res({ passthrough: true }) res, @Req() req) {
+    this.logger.log("accesstoken", JSON.stringify(req.user));
+    this.logger.error("accesstoken", JSON.stringify(req.user));
+    this.logger.debug("accesstoken", JSON.stringify(req.user));
+    this.logger.warn("accesstoken", JSON.stringify(req.user));
     return req?.user;
   }
 

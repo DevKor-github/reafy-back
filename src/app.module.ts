@@ -1,20 +1,21 @@
-import { HttpException, Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { WinstonModule, utilities } from 'nest-winston';
+import { join } from 'path';
+import * as winston from 'winston';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from './user/user.module';
-import { BookModule } from './book/book.module';
 import { AuthenticationModule } from './authentication/authentication.module';
+import { BookModule } from './book/book.module';
+import { CoinModule } from './coin/coin.module';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { HistoryModule } from './history/history.module';
 import { ItemModule } from './item/item.module';
 import { MemoModule } from './memo/memo.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { StatisticsModule } from './statistics/statistics.module';
-import { CoinModule } from './coin/coin.module';
-import { APP_FILTER } from '@nestjs/core';
-import { CustomExceptionFilter } from './common/filter/custom-exception.filter';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -33,6 +34,21 @@ import { CustomExceptionFilter } from './common/filter/custom-exception.filter';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', ''),
     }),
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({
+          level: 'info',
+          format: winston.format.combine(
+            winston.format.timestamp(), // 로그 남긴 시각 표시
+            winston.format.ms(),
+            utilities.format.nestLike('Reafy', {  // 로그 출처인 appName('Reafy') 설정
+              colors: true,
+              prettyPrint: true,
+            }),
+          ),
+        }),
+      ],
+    }),
     UserModule,
     BookModule,
     AuthenticationModule,
@@ -45,4 +61,9 @@ import { CustomExceptionFilter } from './common/filter/custom-exception.filter';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("*");
+
+  }
+}
