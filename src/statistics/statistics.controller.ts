@@ -11,6 +11,7 @@ import { Request } from 'express';
 import {
   MonthlyTotalPagesListDto,
   MonthlyTotalReadingTimesListDto,
+  TodayStatisticsDto,
 } from './dtos/Statistics.dto';
 
 @ApiTags('Statistics')
@@ -51,5 +52,16 @@ export class StatisticsController {
       req.user.userId,
       year,
     );
+  }
+
+  @ApiOperation({ summary: '오늘 독서 통계' })
+  @ApiOkResponse({
+    description:
+      '현재 유저의 오늘 독서 통계를 반환합니다. 분 단위로 주어집니다.',
+    type: TodayStatisticsDto,
+  })
+  @Get('/today')
+  async getTodayStatistics(@Req() req: Request) {
+    return await this.statisticsService.getTodayStatistics(req.user.userId);
   }
 }

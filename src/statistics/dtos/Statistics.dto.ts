@@ -47,3 +47,27 @@ export class MonthlyTotalReadingTimesListDto {
     return resData;
   }
 }
+
+export class TodayStatisticsDto {
+  @ApiProperty({ description: '유저 ID' })
+  userId: number;
+
+  @ApiProperty({ description: 'Date' })
+  date: string;
+
+  @ApiProperty({ description: '오늘 읽은 페이지' })
+  todayPages: number;
+
+  @ApiProperty({ description: '오늘 읽은 시간' })
+  todayReadingTimes: number;
+
+  static makeRes(queryPacket: any) {
+    const resData = new TodayStatisticsDto();
+    resData.userId = queryPacket.user_id;
+    resData.date = queryPacket.date;
+    resData.todayPages = Number(queryPacket.today_pages);
+    resData.todayReadingTimes = Number(queryPacket.today_reading_times);
+
+    return resData;
+  }
+}

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   MonthlyTotalPagesListDto,
   MonthlyTotalReadingTimesListDto,
+  TodayStatisticsDto,
 } from './dtos/Statistics.dto';
 import { UserBookHistoryRepository } from 'src/history/repository/user-book-history.repository';
 
@@ -53,5 +54,12 @@ export class StatisticsService {
     );
 
     return monthlyTotalReadingTimesList;
+  }
+
+  async getTodayStatistics(userId: number): Promise<TodayStatisticsDto> {
+    const queryPacket =
+      await this.userBookHistoryRepository.getTodayStatistics(userId);
+    console.log(queryPacket);
+    return await TodayStatisticsDto.makeRes(queryPacket[0]);
   }
 }
