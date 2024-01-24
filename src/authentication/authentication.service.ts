@@ -1,3 +1,4 @@
+
 import {
   Inject,
   Injectable,
@@ -10,15 +11,19 @@ import {
   ACCESS_TOKEN_EXPIRE,
   REFRESH_TOKEN_EXPIRE,
 } from 'src/common/constant/authentication.constant';
-import { BadAccessTokenException, InvalidRefreshTokenException, VendorNotExistException } from 'src/common/exception/authentication.exception';
+import {
+  BadAccessTokenException,
+  InvalidRefreshTokenException,
+  VendorNotExistException,
+} from 'src/common/exception/authentication.exception';
 import { InternalServerException } from 'src/common/exception/base.exception';
 import { JwtSubjectType } from 'src/common/type/authentication.type';
 import { User } from 'src/model/entity/User.entity';
 import { UserService } from 'src/user/user.service';
 import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
+import { ErrorCodeEnum } from 'src/common/exception/error-code/error.code';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-
 
 @Injectable()
 export class AuthenticationService {
@@ -33,9 +38,7 @@ export class AuthenticationService {
     let oauthId;
     switch (data.vendor) {
       case 'kakao': {
-        oauthId = await this.getUserOauthIdByKakaoAccessToken(
-          data.accessToken,
-        );
+        oauthId = await this.getUserOauthIdByKakaoAccessToken(data.accessToken);
         break;
       }
       default: {
@@ -79,19 +82,21 @@ export class AuthenticationService {
 
     const kakaoId = user?.data?.id;
 
-    const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
+    try {
+      const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
 
-    if (oauthId) return oauthId;
+      if (oauthId) return oauthId;
+    } catch (e) {
+      if (e.errorCode.errorCode != ErrorCodeEnum.USER_NOT_FOUND) throw e; //UserNotFound error가 아닐 경우 re-throw
+      // 회원이 없으면 회원가입 후 아이디 반환
+      const createdUser: User = await this.userService.createUser({
+        oauthId: kakaoId,
+        vender: 'kakao',
+      });
 
-    // 회원이 없으면 회원가입 후 아이디 반환
-    const createdUser: User = await this.userService.createUser({
-      oauthId: kakaoId,
-      vender: 'kakao',
-    });
-
-    this.coinService.createCoin(createdUser.userId);
-    return createdUser.oauthId;
-
+      this.coinService.createCoin(createdUser.userId);
+      return createdUser.oauthId;
+    }
   }
 
   protected async generateAccessToken(oauthId: string): Promise<string> {
@@ -129,9 +134,8 @@ export class AuthenticationService {
 
   async logout(id: number) {
     const user = await this.userService.findByOauthId(id.toString());
-    user.refreshToken = "";
+    user.refreshToken = '';
     await this.userService.updateUser(user);
     return true;
   }
-
 }

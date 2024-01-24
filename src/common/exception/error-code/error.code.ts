@@ -20,7 +20,7 @@ class ErrorCodeObject implements ErrorCode {
 
 // client에서 같은 httpstatus code라도 에러를 구분할 수 있게 추가
 // aabb : aa 도메인 구분 bb 에러 구분
-enum ErrorCodeEnum {
+export enum ErrorCodeEnum {
   INTERNAL_SERVER_ERROR = '0000',
   VENDOR_NOT_EXIST = '0101',
   BAD_ACCESS_TOKEN = '0102',
