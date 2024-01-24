@@ -17,6 +17,7 @@ import { User } from 'src/model/entity/User.entity';
 import { UserService } from 'src/user/user.service';
 import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
+import { ErrorCodeEnum } from 'src/common/exception/error-code/error.code';
 
 @Injectable()
 export class AuthenticationService {
@@ -77,7 +78,7 @@ export class AuthenticationService {
 
       if (oauthId) return oauthId;
     } catch (e) {
-      if (e.errorCode.errorCode != '0105') throw e; //UserNotFound error가 아닐 경우 re-throw
+      if (e.errorCode.errorCode != ErrorCodeEnum.USER_NOT_FOUND) throw e; //UserNotFound error가 아닐 경우 re-throw
       // 회원이 없으면 회원가입 후 아이디 반환
       const createdUser: User = await this.userService.createUser({
         oauthId: kakaoId,
