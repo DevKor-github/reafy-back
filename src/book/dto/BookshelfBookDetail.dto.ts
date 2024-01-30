@@ -2,6 +2,10 @@ import { IsNumber, IsString } from 'class-validator';
 import { ApiOperation, ApiProperty } from '@nestjs/swagger';
 
 export class BookshelfBookDetailDto {
+  @ApiProperty({ description: '삭제 여부' })
+  @IsString()
+  isDeleted: string;
+
   @ApiProperty({ description: 'bookshelfBook_id' })
   @IsNumber()
   bookshelfbookId: number;
@@ -60,7 +64,23 @@ export class BookshelfBookDetailDto {
 
   @ApiOperation({ description: '내부 응답 생성 함수' })
   static async makeRes(data, startPage, endPage) {
-    const resData: BookshelfBookDetailDto = { startPage, endPage, ...data };
+    const resData: BookshelfBookDetailDto = {
+      isDeleted: data.deleted_at ? 'true' : 'false',
+      bookshelfbookId: data.bookshelf_book_id,
+      progressState: data.progress_state,
+      isFavorite: data.is_favorite,
+      bookId: data.book_id,
+      title: data.title,
+      author: data.author,
+      content: data.content,
+      publisher: data.publisher,
+      thumbnailURL: data.thumbnail_url,
+      link: data.link,
+      category: data.category,
+      pages: data.pages,
+      startPage: startPage,
+      endPage: endPage,
+    };
     return resData;
   }
 }
