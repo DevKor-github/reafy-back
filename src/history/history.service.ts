@@ -13,8 +13,9 @@ export class HistoryService {
   constructor(
     private readonly userBookHistoryRepository: UserBookHistoryRepository,
     private readonly bookshelfRepository: BookShelfRepository,
-    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
-  ) { }
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+  ) {}
 
   async getUserBookHistory(userId: number): Promise<UserBookHistoryResDto[]> {
     const resultArray = await this.userBookHistoryRepository.find({
@@ -22,9 +23,12 @@ export class HistoryService {
       order: { createdAt: 'DESC' },
     });
     if (resultArray.length == 0) {
-      this.logger.error(`## getUserBookHistory can not find book userId : ${userId}, resultArray : ${JSON.stringify(resultArray)}`);
+      this.logger.error(
+        `## getUserBookHistory can not find book userId : ${userId}, resultArray : ${JSON.stringify(
+          resultArray,
+        )}`,
+      );
       throw HistoryNotFound();
-
     }
     return this.processHistoryList(resultArray);
   }
@@ -38,7 +42,9 @@ export class HistoryService {
       order: { createdAt: 'DESC' },
     });
     if (resultArray.length == 0) {
-      this.logger.error(`## can not find book history userId : ${userId}, bookshelfBookId : ${bookshelfBookId}`);
+      this.logger.error(
+        `## can not find book history userId : ${userId}, bookshelfBookId : ${bookshelfBookId}`,
+      );
       throw HistoryNotFound();
     }
     return this.processHistoryList(resultArray);
@@ -55,7 +61,11 @@ export class HistoryService {
       },
     });
     if (!existedBook) {
-      this.logger.error(`## can not find book userId : ${userId}, createUserBookHistoryDto : ${JSON.stringify(createUserBookHistoryDto)}`);
+      this.logger.error(
+        `## can not find book userId : ${userId}, createUserBookHistoryDto : ${JSON.stringify(
+          createUserBookHistoryDto,
+        )}`,
+      );
       throw BookNotFoundException();
     }
     return UserBookHistoryResDto.makeRes(
@@ -70,7 +80,7 @@ export class HistoryService {
     const userBookHistoryList = [];
     resultArray.map((history: UserBookHistory) => {
       userBookHistoryList.push(UserBookHistoryResDto.makeRes(history));
-    })
+    });
     return userBookHistoryList;
   }
 }
