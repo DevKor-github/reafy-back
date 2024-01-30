@@ -27,7 +27,7 @@ export class BookshelfBookDto {
   isFavorite: number;
 
   @ApiOperation({ description: '응답 생성 내부 함수' })
-  static async makeRes(data) {
+  static makeRes(data) {
     const resData: BookshelfBookDto = { ...data };
     return resData;
   }

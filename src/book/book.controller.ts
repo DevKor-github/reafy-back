@@ -1,7 +1,6 @@
 import { Get, Post, Req, Res, HttpStatus } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Controller } from '@nestjs/common';
-import { Book } from 'src/model/entity/Book.entity';
 import {
   Query,
   Param,
@@ -39,22 +38,18 @@ export class BookController {
     description:
       '검색어 Query와 Page를 받아 알라딘 APi를 통한 검색 결과를 노출합니다. 페이지는 10개 단위로 주어지며, 응답은 SearchBookResDto의 리스트 형태로 주어집니다.',
   })
-  @ApiOkResponse({ description: '검색 결과 출력', type: SearchBookResDto })
+  @ApiOkResponse({
+    description: '검색 결과 출력',
+    type: SearchBookResDto,
+    isArray: true,
+  })
   @Get('/search') // Return : 검색 결과 리스트(10개 단위)
   async searchBook(
     @Req() req,
     @Query('query') query: string,
     @Query('page') page: number = 1,
   ) {
-    //dto화 필요
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.searchBook(query, page),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.searchBook(query, page);
   }
 
   @ApiOperation({
@@ -71,41 +66,11 @@ export class BookController {
     @Req() req: Request,
     @Body() saveInBookshelfReqDto: SaveInBookshelfReqDto,
   ) {
-    try {
-      return {
-        status: 201,
-        response: await this.bookService.saveInBookshelf(
-          req.user.userId,
-          saveInBookshelfReqDto,
-        ), // userId = 1
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.saveInBookshelf(
+      req.user.userId,
+      saveInBookshelfReqDto,
+    );
   }
-
-  //이하는 jwt 도입 시 jwtAutoGuard 적용. userid parameter 제거
-  //중복이라 일단 주석처리.
-  /*@ApiOperation({
-    summary: '책장 조회하기',
-    description:
-      '책장을 조회합니다. bookshelfId, bookId, title, thumbnaulURL, progressState가 담겨 있는 리스트를 반환합니다.',
-  })
-  @ApiOkResponse({
-    description: '책장 조회 결과 출력',
-    type: BookshelfBookDto,
-  })
-  @Get('/bookshelf') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
-  async getBookshelfBook(@Req() req) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getBookshelfBook(1),
-      }; //요청 오브젝트에서 user Id 가져오기
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
-  }*/
 
   @ApiOperation({
     summary: '상태별 책장 조회하기; 전 = 0, 중 = 1, 후 = 2',
@@ -115,23 +80,17 @@ export class BookController {
   @ApiOkResponse({
     description: '해당 상태의 책장 조회 결과 출력',
     type: BookshelfBookDto,
+    isArray: true,
   })
   @Get('/bookshelf') //Return : user id, bookshelfbook id, thumbnail url이 담겨있는 책 리스트
   async getBookshelfBookOnState(
     @Req() req,
     @Query('progressState') progressState: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getBookshelfBookOnState(
-          req.user.userId,
-          Number(progressState),
-        ),
-      }; //요청 오브젝트에서 user Id 가져오기
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.getBookshelfBookOnState(
+      req.user.userId,
+      Number(progressState),
+    ); //요청 오브젝트에서 user Id 가져오기
   }
 
   @ApiOperation({
@@ -148,17 +107,10 @@ export class BookController {
     @Req() req,
     @Param('bookshelfbookId') bookshelfbookId: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getBookshelfBookDetail(
-          req.user.userId, //userId
-          bookshelfbookId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.getBookshelfBookDetail(
+      req.user.userId, //userId
+      bookshelfbookId,
+    );
   }
 
   @ApiOperation({
@@ -183,18 +135,11 @@ export class BookController {
     @Param('bookshelfbookId') bookshelfbookId: number,
     @Body('progressState') progressState: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.updateBookshelfBook(
-          req.user.userId, //userId
-          bookshelfbookId,
-          progressState,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.updateBookshelfBook(
+      req.user.userId, //userId
+      bookshelfbookId,
+      progressState,
+    );
   }
 
   @ApiOperation({
@@ -211,17 +156,10 @@ export class BookController {
     @Req() req,
     @Param('bookshelfbookId') bookshelfbookId: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.deleteBookshelfBook(
-          req.user.userId, //userId
-          bookshelfbookId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.deleteBookshelfBook(
+      req.user.userId, //userId
+      bookshelfbookId,
+    );
   }
 
   @ApiOperation({
@@ -229,19 +167,14 @@ export class BookController {
     description:
       '내 책장에 담겨 있는 책 중, My favorite에 해당하는 책들을 조회합니다.',
   })
-  @ApiOkResponse({ description: 'My favorites 출력', type: BookshelfBookDto })
+  @ApiOkResponse({
+    description: 'My favorites 출력',
+    type: BookshelfBookDto,
+    isArray: true,
+  })
   @Get('/favorite')
   async getFavoriteBookshelfBook(@Req() req) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.getFavoriteBookshelfBook(
-          req.user.userId,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.getFavoriteBookshelfBook(req.user.userId);
   }
 
   @ApiOperation({
@@ -266,17 +199,10 @@ export class BookController {
     @Param('bookshelfbookId') bookshelfbookId: number,
     @Body('isFavorite') isFavorite: number,
   ) {
-    try {
-      return {
-        status: 200,
-        response: await this.bookService.updateFavoriteBookshelfBook(
-          req.user.userId,
-          bookshelfbookId,
-          isFavorite,
-        ),
-      };
-    } catch (e) {
-      return { status: e.HttpStatus, message: e.message };
-    }
+    return await this.bookService.updateFavoriteBookshelfBook(
+      req.user.userId,
+      bookshelfbookId,
+      isFavorite,
+    );
   }
 }

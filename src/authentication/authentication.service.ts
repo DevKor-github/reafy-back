@@ -1,94 +1,101 @@
+
 import {
-  BadRequestException,
-  HttpException,
+  Inject,
   Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
+  LoggerService
 } from '@nestjs/common';
-import { LoginRequest } from './dto/LoginRequest.dto';
-import { TokenResponse } from './dto/TokenResponse.dto';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
-import { HttpService } from '@nestjs/axios';
+import axios from 'axios';
+import { CoinService } from 'src/coin/coin.service';
 import {
   ACCESS_TOKEN_EXPIRE,
   REFRESH_TOKEN_EXPIRE,
 } from 'src/common/constant/authentication.constant';
+import {
+  BadAccessTokenException,
+  InvalidRefreshTokenException,
+  VendorNotExistException,
+} from 'src/common/exception/authentication.exception';
+import { InternalServerException } from 'src/common/exception/base.exception';
 import { JwtSubjectType } from 'src/common/type/authentication.type';
 import { User } from 'src/model/entity/User.entity';
-import axios from 'axios';
+import { UserService } from 'src/user/user.service';
+import { LoginRequest } from './dto/LoginRequest.dto';
+import { TokenResponse } from './dto/TokenResponse.dto';
+import { ErrorCodeEnum } from 'src/common/exception/error-code/error.code';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
     private readonly userService: UserService,
+    private readonly coinService: CoinService,
     private readonly jwtService: JwtService,
-    private readonly httpService: HttpService,
-  ) {}
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService,
+  ) { }
 
   async login(data: LoginRequest, res): Promise<TokenResponse> {
-    try {
-      let oauthId;
-      switch (data.vendor) {
-        case 'kakao': {
-          oauthId = await this.getUserOauthIdByKakaoAccessToken(
-            data.accessToken,
-          );
-          break;
-        }
-        default: {
-          throw new BadRequestException(); //소셜로그인 선택 실패 예외처리
-        }
+    let oauthId;
+    switch (data.vendor) {
+      case 'kakao': {
+        oauthId = await this.getUserOauthIdByKakaoAccessToken(data.accessToken);
+        break;
       }
-
-      // accessToken, refreshToken 발급
-      const [accessToken, refreshToken] = await Promise.all([
-        this.generateAccessToken(oauthId),
-        this.generateRefreshToken(oauthId),
-      ]);
-
-      res.cookie('refresh_token', refreshToken, {
-        path: '/auth',
-        httpOnly: true,
-      });
-
-      const user = await this.userService.findByOauthId(oauthId);
-
-      this.userService.updateUser({ ...user, refreshToken: refreshToken });
-
-      return new TokenResponse({ accessToken });
-    } catch (err) {
-      console.log(err);
-      throw new InternalServerErrorException();
+      default: {
+        this.logger.error("invalid social login");
+        throw VendorNotExistException(); //소셜로그인 선택 실패 예외처리
+      }
     }
+
+    // accessToken, refreshToken 발급
+    const [accessToken, refreshToken] = await Promise.all([
+      this.generateAccessToken(oauthId),
+      this.generateRefreshToken(oauthId),
+    ]);
+
+    res.cookie('refresh_token', refreshToken, {
+      path: '/auth',
+      httpOnly: true,
+    });
+
+    const user = await this.userService.findByOauthId(oauthId);
+
+    this.userService.updateUser({ ...user, refreshToken: refreshToken });
+
+    return new TokenResponse({ accessToken });
   }
 
   async getUserOauthIdByKakaoAccessToken(accessToken: string): Promise<string> {
     // KAKAO LOGIN 회원조회 REST-API
+    let user;
     try {
-      const user: any = await axios.get('https://kapi.kakao.com/v2/user/me', {
+      user = await axios.get('https://kapi.kakao.com/v2/user/me', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+    } catch (err) {
+      this.logger.error(`\n## Fail to get kakao user info , accessToken : ${accessToken}`, {}, err.stack);
+      if (err?.response?.data?.code === -401) throw BadAccessTokenException();
+      throw InternalServerException();
+    }
 
-      if (!user) throw new UnauthorizedException(); //카카오 로그인 실패 예외처리
-      const kakaoId = user?.data?.id;
+    const kakaoId = user?.data?.id;
 
+    try {
       const oauthId = (await this.userService.findByOauthId(kakaoId))?.oauthId;
 
       if (oauthId) return oauthId;
-      return (
-        await this.userService.createUser({
-          userId: null,
-          oauthId: kakaoId,
-          vender: 'kakao',
-          refreshToken: null,
-        })
-      ).oauthId; // 회원이 없으면 회원가입 후 아이디 반환
-    } catch (err) {
-      console.log(`error : ${err}`);
-      throw new InternalServerErrorException();
+    } catch (e) {
+      if (e.errorCode.errorCode != ErrorCodeEnum.USER_NOT_FOUND) throw e; //UserNotFound error가 아닐 경우 re-throw
+      // 회원이 없으면 회원가입 후 아이디 반환
+      const createdUser: User = await this.userService.createUser({
+        oauthId: kakaoId,
+        vender: 'kakao',
+      });
+
+      this.coinService.createCoin(createdUser.userId);
+      return createdUser.oauthId;
     }
   }
 
@@ -114,12 +121,21 @@ export class AuthenticationService {
 
   async refreshJWT(id: number, refreshToken: string): Promise<TokenResponse> {
     const user = await this.userService.findByOauthId(id.toString());
-    if (!user) throw new UnauthorizedException('존재하지 않는 유저입니다.');
 
-    if (user.refreshToken !== refreshToken)
-      throw new UnauthorizedException('invalid refresh token');
+    if (user.refreshToken !== refreshToken) {
+
+      this.logger.error(`\n## Invalid refreshToken , requsrt refreshToken : ${refreshToken}, user refreshToken : ${user.refreshToken}`);
+      throw InvalidRefreshTokenException();
+    }
 
     const accessToken = await this.generateAccessToken(user.oauthId);
     return new TokenResponse({ accessToken });
+  }
+
+  async logout(id: number) {
+    const user = await this.userService.findByOauthId(id.toString());
+    user.refreshToken = '';
+    await this.userService.updateUser(user);
+    return true;
   }
 }

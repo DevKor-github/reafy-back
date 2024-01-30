@@ -1,7 +1,8 @@
 import { Entity, PrimaryColumn, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { BasicDate } from './BasicDate.entity';
 
 @Entity('memo_hashtag')
-export class MemoHashtag {
+export class MemoHashtag extends BasicDate {
   @PrimaryGeneratedColumn({ name: 'memo_hashtag_id' })
   memoHashtagId: number;
 

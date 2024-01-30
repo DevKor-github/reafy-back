@@ -1,122 +1,109 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Book } from 'src/model/entity/Book.entity';
 import { HttpService } from '@nestjs/axios/dist';
-import { BookshelfBook } from 'src/model/entity/BookshelfBook.entity';
-import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { BookshelfBookDto } from 'src/book/dto/BookshelfBook.dto';
-import { SearchBookResDto } from 'src/book/dto/SearchBookRes.dto';
 import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
 import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
+import { SearchBookResDto } from 'src/book/dto/SearchBookRes.dto';
+import {
+  AlreadyBookExistException,
+  ApiAccessErrorException,
+  BookNotFoundException,
+  InvalidISBNException,
+} from 'src/common/exception/book-service.exception';
+import { UserBookHistoryRepository } from 'src/history/repository/user-book-history.repository';
+import { Book } from 'src/model/entity/Book.entity';
 import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
+import { BookRepository } from './repository/book.repository';
+import { BookShelfRepository } from './repository/bookshelf.repository';
 
 @Injectable()
 export class BookService {
   constructor(
-    @InjectRepository(Book) private readonly bookRepository: Repository<Book>,
-    @InjectRepository(BookshelfBook)
-    private readonly bookshelfRepository: Repository<BookshelfBook>,
-    @InjectRepository(UserBookHistory)
-    private readonly userBookHistoryRepository: Repository<UserBookHistory>,
+    private readonly bookRepository: BookRepository,
+    private readonly bookshelfRepository: BookShelfRepository,
+    private readonly userBookHistoryRepository: UserBookHistoryRepository,
     private readonly httpService: HttpService,
-  ) {} //Book repository inject.
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
+  ) { }
 
-  findAll(): Promise<Book[]> {
-    return this.bookRepository.find();
-  }
-
+  //검색어와 pagination으로 검색 결과 반환
   async searchBook(query: string, page: number): Promise<SearchBookResDto[]> {
-    //query와 page에 맞는 DTO list 리턴. Swagger needed. 200.
-    const result = await this.httpService.axiosRef.get(
+    const resultArray = await this.httpService.axiosRef.get(
       `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Cover=Big&Version=20131101&start=${page}`,
     );
-    let resultArray: SearchBookResDto[] = [];
-    for (let i = 0; i < 10; i++) {
-      resultArray.push(await SearchBookResDto.makeRes(result.data.item[i]));
+    if (resultArray.data.errorCode) {
+      this.logger.error("## cannot get book info from aladin api", JSON.stringify(resultArray));
+      throw ApiAccessErrorException();
     }
-    return resultArray;
+
+    let SearchBookList: SearchBookResDto[] = [];
+    resultArray.data.item.map(async (item) => {
+      SearchBookList.push(await SearchBookResDto.makeRes(item));
+    });
+    return SearchBookList;
   }
 
-  async registerBook(isbn13: string) {
-    //내부 책 DB 등록용 API. 201.
+  //내부 책 DB 등록
+  async registerBook(isbn13: string): Promise<Book> {
     const result = await this.httpService.axiosRef.get(
       `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${process.env.ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${isbn13}&Cover=Big&output=js&Version=20131101`,
     );
-    const registeredBook: RegisterBookDto = await RegisterBookDto.makeDto(
+    if (result.data.errorCode == 8) {
+      this.logger.error("## cannot get book info by isbn13", JSON.stringify(result));
+      throw InvalidISBNException();
+    }
+    const registeredBook: RegisterBookDto = RegisterBookDto.makeDto(
       result.data.item[0],
     );
     return await this.bookRepository.save(registeredBook);
   }
 
-  async getBookshelfBook(userId: number): Promise<BookshelfBookDto[]> {
-    //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200. 책장책 id, 제목, 표지 url을 전달.
-    const resultArray = await this.bookRepository.query(
-      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title, book.thumbnail_url,  book.author, bookshelf_book.progress_state 
-      from user
-      left join bookshelf_book on user.user_id = bookshelf_book.user_id 
-      left join book on bookshelf_book.book_id = book.book_id
-      where user.user_id = ${userId} ;`,
-    );
-
-    const bookshelfBookList: BookshelfBookDto[] = await Promise.all(
-      resultArray.map((book) => {
-        return BookshelfBookDto.makeRes(book);
-      }),
-    );
-    return bookshelfBookList;
-  }
-
+  //상태 param에 따라 그에 맞는 bookshelfbook 리턴
   async getBookshelfBookOnState(
     userId: number,
     progressState: number,
   ): Promise<BookshelfBookDto[]> {
-    //상태를 index화 시켜서(0,1,2) param에 따라 그에 맞는 bookshelfbook 리턴
-    //유저 id 받아서 책장의 책 id, 표지 object를 array 형태로 전달. Return DTO & Swagger needed. 200. 책장책 id, 제목, 표지 url을 전달.
-    const resultArray = await this.bookRepository.query(
-      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title,  book.thumbnail_url, book.author, bookshelf_book.progress_state, bookshelf_book.is_favorite 
-      from user
-      left join bookshelf_book on user.user_id = bookshelf_book.user_id 
-      left join book on bookshelf_book.book_id = book.book_id
-      where user.user_id = ${userId} and bookshelf_book.progress_state =${progressState};`,
+    const resultArray = await this.bookRepository.getBookshelfBookOnState(
+      userId,
+      progressState,
     );
-    const bookshelfBookListOnState: BookshelfBookDto[] = await Promise.all(
+
+    // if (resultArray.length == 0) {
+    //   this.logger.error(`## can not find book list userId : ${userId}, progressState : ${progressState}`);
+    //   throw BookNotFoundException();
+    // }
+
+    const bookshelfBookListOnState: BookshelfBookDto[] =
       resultArray.map((book) => {
         return BookshelfBookDto.makeRes(book);
-      }),
-    );
+      });
 
     return bookshelfBookListOnState;
   }
 
-  async getBookshelfBookDetail(userId: number, bookshelfbookId: number) {
-    //유저 id, 책장 책 id 받아서 detail object 전달. DTO & Swagger needed. 200
-    console.log(userId);
-    console.log(bookshelfbookId);
-    const resultArray = await this.bookshelfRepository.query(
-      `
-      SELECT *
-      FROM bookshelf_book
-      LEFT JOIN book ON book.book_id = bookshelf_book.book_id
-      WHERE bookshelf_book.user_id = ${userId} AND bookshelf_book.bookshelf_book_id = ${bookshelfbookId};
-      `,
+  //유저 책장에 있는 책의 상세 정보
+  async getBookshelfBookDetail(
+    userId: number,
+    bookshelfbookId: number,
+  ): Promise<BookshelfBookDetailDto> {
+    const resultArray = await this.bookshelfRepository.getBookshelfBookDetail(
+      userId,
+      bookshelfbookId,
     );
 
-    const firstPage = await this.userBookHistoryRepository.findOne({
-      where: { bookshelfBookId: bookshelfbookId },
-      order: { startPage: 'ASC' },
-    });
-    const lastPage = await this.userBookHistoryRepository.findOne({
-      where: { bookshelfBookId: bookshelfbookId },
-      order: { endPage: 'DESC' },
-    });
+    // if (resultArray.length === 0) {
+    //   this.logger.error(`## can not find book list userId : ${userId}, bookshelfbookId : ${bookshelfbookId}`);
+    //   throw BookNotFoundException();
+    // }
 
-    /*console.log(resultArray[0]);
-    console.log(firstPage);
-    console.log(lastPage);*/
+    const firstHistory =
+      await this.userBookHistoryRepository.getStartHistory(bookshelfbookId);
+    const lastHistory =
+      await this.userBookHistoryRepository.getEndHistory(bookshelfbookId);
 
-    const startPage = firstPage ? firstPage.startPage : 0;
-    const endPage = lastPage ? lastPage.endPage : 0;
+    const startPage = firstHistory ? firstHistory.startPage : 0;
+    const endPage = lastHistory ? lastHistory.endPage : 0;
 
     return await BookshelfBookDetailDto.makeRes(
       resultArray[0],
@@ -125,50 +112,43 @@ export class BookService {
     );
   }
 
-  async saveInBookshelf(userId: number, userBookItems: SaveInBookshelfReqDto) {
-    //userId, isbn13, progressState 받아서 저장. return DTO & Swagger Needed. 201.
+  //검색 결과에서 isbn13을 이용해 유저 책장에 저장
+  async saveInBookshelf(
+    userId: number,
+    userBookItems: SaveInBookshelfReqDto,
+  ): Promise<BookshelfBookDetailDto> {
     const bookExist = await this.bookRepository.findOne({
-      where: { isbn13: userBookItems.isbn13 }, //해당 책 isbn13으로 DB 내 검색
+      where: { isbn13: userBookItems.isbn13 },
     });
 
     if (bookExist) {
-      //존재할 시, 해당 책이 bookshelf에 존재하는지 체크
+      //책이 DB에 존재 -> 책장에 존재하는 지 체크
       const bookshelfBookExist = await this.bookRepository.findOne({
         where: { bookId: bookExist.bookId },
       });
-      if (bookshelfBookExist)
-        throw new HttpException('이미 존재하는 책입니다', HttpStatus.CONFLICT);
-
+      if (bookshelfBookExist) { //책장에 존재 -> Error
+        this.logger.error(`## book is exist userId : ${userId}, progressState : ${JSON.stringify(userBookItems)}`);
+        throw AlreadyBookExistException();
+      }
       const bookshelfInfo = await this.bookshelfRepository.save({
-        //bookshelf에 없는 책이면 bookshelf에 추가
         userId: userId,
         bookId: bookExist.bookId,
         progressState: userBookItems.progressState,
       });
-
-      /*await this.userBookHistoryRepository.save({
-        //userBookHistory 생성
-        bookshelfBookId: bookshelfInfo.bookshelfBookId,
-      }); userBookHistory는 독서 기록과 관련된 기록.*/
 
       return await this.getBookshelfBookDetail(
         bookshelfInfo.userId,
         bookshelfInfo.bookshelfBookId,
       );
     } else {
-      //해당 책이 book DB에 존재하지 않을 경우
-      const newBook = await this.registerBook(userBookItems.isbn13); //책을 book DB에 추가
+      //책이 DB에 존재하지 않음
+      const newBook = await this.registerBook(userBookItems.isbn13); //책을 내부 DB 추가
 
       const bookshelfInfo = await this.bookshelfRepository.save({
-        //bookshelf에 추가
         userId: userId,
         bookId: newBook.bookId,
         progressState: userBookItems.progressState,
       });
-
-      /*await this.userBookHistoryRepository.save({
-        bookshelfBookId: bookshelfInfo.bookshelfBookId,
-      });*/
 
       return await this.getBookshelfBookDetail(
         bookshelfInfo.userId,
@@ -178,32 +158,43 @@ export class BookService {
   }
 
   async updateBookshelfBook(
-    //유저 id, 책장 책, progress State 받아서 업데이트 후 업데이트 결과 object 전달. DTO(getBookshelfBookDetailDto) & Swagger needed. 200.
+    //책의 상태 업데이트
     userId: number,
     bookshelfbookId: number,
     progressState: number,
-  ) {
-    const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
-      where: { userId: userId, bookshelfBookId: bookshelfbookId }, //실패하면 error throw
+  ): Promise<BookshelfBookDetailDto> {
+    const updatedBookshelfBook = await this.bookshelfRepository.findOne({
+      where: { userId: userId, bookshelfBookId: bookshelfbookId },
     });
+
+    if (!updatedBookshelfBook) {
+      this.logger.error(`## can not find book  userId : ${userId}, bookshelfbookId : ${bookshelfbookId}, progressState : ${progressState}`);
+      throw BookNotFoundException();
+    }
+
     updatedBookshelfBook.progressState = progressState;
+
     await this.bookshelfRepository.save(updatedBookshelfBook);
+
     return await this.getBookshelfBookDetail(userId, bookshelfbookId);
   }
 
-  async deleteBookshelfBook(userId: number, bookshelfbookId: number) {
-    //유저 id, 책장 책 id를 받아 삭제 후 삭제된 데이터 object 전달. DTO(getBookshelDetailfBook) & Swagger needed. 200
-
+  async deleteBookshelfBook(
+    userId: number,
+    bookshelfbookId: number,
+  ): Promise<BookshelfBookDetailDto> {
     const deletedBookshelfBook = await this.getBookshelfBookDetail(
+      //삭제되는 책 정보
       userId,
       bookshelfbookId,
     );
-    /*await this.userBookHistoryRepository.delete({
-      // 나중에 softRemove로 변경.. relation 아니라 cascade 설정 못함.
-      bookshelfBookId: bookshelfbookId,
-    });*/
-    await this.bookshelfRepository.delete({
-      // 마찬가지.
+
+    if (!deletedBookshelfBook) {
+      this.logger.error(`## can not find book userId : ${userId}, bookshelfbookId : ${bookshelfbookId}`);
+      throw BookNotFoundException();
+    }
+
+    await this.bookshelfRepository.softDelete({
       userId: userId,
       bookshelfBookId: bookshelfbookId,
     });
@@ -211,19 +202,19 @@ export class BookService {
   }
 
   async getFavoriteBookshelfBook(userId: number): Promise<BookshelfBookDto[]> {
-    console.log(userId);
-    const resultArray = await this.bookRepository.query(
-      `select user.user_id, bookshelf_book.bookshelf_book_id, book.title,  book.thumbnail_url, book.author, bookshelf_book.progress_state, bookshelf_book.is_favorite 
-      from user
-      left join bookshelf_book on user.user_id = bookshelf_book.user_id 
-      left join book on bookshelf_book.book_id = book.book_id
-      where user.user_id = ${userId} and bookshelf_book.is_favorite = 1;`,
-    );
-    const favoriteBookshelfBookList: BookshelfBookDto[] = await Promise.all(
+    const resultArray =
+      await this.bookRepository.getFavoriteBookshelfBook(userId);
+
+    if (resultArray.length == 0) {
+      this.logger.error(`## can not find book userId : ${userId}, resultArray : ${JSON.stringify(resultArray)}`);
+      throw BookNotFoundException();
+    }
+
+    const favoriteBookshelfBookList: BookshelfBookDto[] =
       resultArray.map((book) => {
         return BookshelfBookDto.makeRes(book);
-      }),
-    );
+      });
+
 
     return favoriteBookshelfBookList;
   }
@@ -232,10 +223,14 @@ export class BookService {
     userId: number,
     bookshelfbookId: number,
     isFavorite: number,
-  ) {
-    const updatedBookshelfBook = await this.bookshelfRepository.findOneOrFail({
-      where: { userId: userId, bookshelfBookId: bookshelfbookId }, //실패하면 error throw
+  ): Promise<BookshelfBookDetailDto> {
+    const updatedBookshelfBook = await this.bookshelfRepository.findOne({
+      where: { userId: userId, bookshelfBookId: bookshelfbookId },
     });
+    if (!updatedBookshelfBook) {
+      this.logger.error(`## can not find book userId : ${userId}, bookshelfbookId : ${bookshelfbookId}, isFavorite : ${isFavorite}`);
+      throw BookNotFoundException();
+    }
     updatedBookshelfBook.isFavorite = isFavorite;
     await this.bookshelfRepository.save(updatedBookshelfBook);
     return await this.getBookshelfBookDetail(userId, bookshelfbookId);

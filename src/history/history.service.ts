@@ -1,62 +1,76 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { BookShelfRepository } from 'src/book/repository/bookshelf.repository';
+import { BookNotFoundException } from 'src/common/exception/book-service.exception';
+import { HistoryNotFound } from 'src/common/exception/history-service.exception';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
-import { Repository } from 'typeorm';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
-import { CoinHistory } from 'src/model/entity/CoinHistory.entity';
-import { Coin } from 'src/model/entity/Coin.entity';
+import { UserBookHistoryResDto } from './dtos/UserBookHistoryRes.dto';
+import { UserBookHistoryRepository } from './repository/user-book-history.repository';
 
 @Injectable()
 export class HistoryService {
   constructor(
-    @InjectRepository(UserBookHistory)
-    private readonly userBookHistoryRepository: Repository<UserBookHistory>,
-    @InjectRepository(CoinHistory)
-    private readonly coinHistoryRepository: Repository<CoinHistory>,
-    @InjectRepository(Coin) private readonly coinRepository: Repository<Coin>,
-  ) {}
+    private readonly userBookHistoryRepository: UserBookHistoryRepository,
+    private readonly bookshelfRepository: BookShelfRepository,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
+  ) { }
 
-  async getUserBookHistory(userId: number) {
-    const userBookHistoryList = await this.userBookHistoryRepository.find({
+  async getUserBookHistory(userId: number): Promise<UserBookHistoryResDto[]> {
+    const resultArray = await this.userBookHistoryRepository.find({
       where: { userId: userId },
+      order: { createdAt: 'DESC' },
     });
-    return userBookHistoryList;
+    if (resultArray.length == 0) {
+      this.logger.error(`## getUserBookHistory can not find book userId : ${userId}, resultArray : ${JSON.stringify(resultArray)}`);
+      throw HistoryNotFound();
+
+    }
+    return this.processHistoryList(resultArray);
   }
+
+  async getUserBookHistoryByBookshelfBook(
+    userId: number,
+    bookshelfBookId: number,
+  ): Promise<UserBookHistoryResDto[]> {
+    const resultArray = await this.userBookHistoryRepository.find({
+      where: { userId: userId, bookshelfBookId: bookshelfBookId },
+      order: { createdAt: 'DESC' },
+    });
+    if (resultArray.length == 0) {
+      this.logger.error(`## can not find book history userId : ${userId}, bookshelfBookId : ${bookshelfBookId}`);
+      throw HistoryNotFound();
+    }
+    return this.processHistoryList(resultArray);
+  }
+
   async createUserBookHistory(
     userId: number,
     createUserBookHistoryDto: CreateUserBookHistoryDto,
-  ) {
-    console.log(CreateUserBookHistoryDto);
-    const coinHistoryId = (
-      await this.createCoinHistory(userId, createUserBookHistoryDto)
-    ).coinHistoryId;
-
-    return await this.userBookHistoryRepository.save({
-      userId,
-      ...createUserBookHistoryDto,
-      coinHistoryId,
+  ): Promise<UserBookHistoryResDto> {
+    const existedBook = await this.bookshelfRepository.findOne({
+      where: {
+        userId: userId,
+        bookshelfBookId: createUserBookHistoryDto.bookshelfBookId,
+      },
     });
-
-    //dto 정보 추출
-    //Coin earning 정보 추가 로직
-    //Coin earning 정보 담아서 userbookhistory 생성
+    if (!existedBook) {
+      this.logger.error(`## can not find book userId : ${userId}, createUserBookHistoryDto : ${JSON.stringify(createUserBookHistoryDto)}`);
+      throw BookNotFoundException();
+    }
+    return UserBookHistoryResDto.makeRes(
+      await this.userBookHistoryRepository.save({
+        userId,
+        ...createUserBookHistoryDto,
+      }),
+    );
   }
 
-  async createCoinHistory(
-    userId: number,
-    createUserBookHistoryDto: CreateUserBookHistoryDto,
-  ) {
-    const userCoin = await this.coinRepository.findOneOrFail({
-      where: { userId: userId },
-    }); //유저 코인 객체 찾기
-
-    const newCoinHistory = new CoinHistory();
-    newCoinHistory.coinId = userCoin.coinId;
-    newCoinHistory.earnAmount = createUserBookHistoryDto.coins; //코인 history 엔터티 생성
-
-    userCoin.totalCoin += createUserBookHistoryDto.coins;
-    await this.coinRepository.save(userCoin); //코인 증가
-
-    return await this.coinHistoryRepository.save(newCoinHistory); //history 기록
-  } //내부 코인 생성 처리 함수. userId로 coinId 찾아서 생성 코인 수만큼 생성
+  processHistoryList(resultArray: any): UserBookHistoryResDto[] {
+    const userBookHistoryList = [];
+    resultArray.map((history: UserBookHistory) => {
+      userBookHistoryList.push(UserBookHistoryResDto.makeRes(history));
+    })
+    return userBookHistoryList;
+  }
 }

@@ -4,7 +4,7 @@ import { BasicDate } from './BasicDate.entity';
 @Entity('hashtag')
 export class Hashtag extends BasicDate {
   @PrimaryGeneratedColumn({ name: 'hashtag_id' })
-  id: number;
+  hashtagId: number;
 
   @Column({ name: 'user_id' })
   userId: number;
