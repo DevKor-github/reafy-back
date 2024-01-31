@@ -2,6 +2,10 @@ import { IsNumber, IsString } from 'class-validator';
 import { ApiOperation, ApiProperty } from '@nestjs/swagger';
 
 export class BookshelfBookDetailDto {
+  @ApiProperty({ description: '삭제 여부' })
+  @IsString()
+  isDeleted: string;
+
   @ApiProperty({ description: 'bookshelfBook_id' })
   @IsNumber()
   bookshelfbookId: number;
