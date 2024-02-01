@@ -70,19 +70,29 @@ export class MemoService {
     userId: number,
     hashtag: string,
     page: number,
-  ): Promise<MemoResDto[]> {
+  ): Promise<MemoResWithPagesDto> {
     //hashtag -> hashtagId 검색, hashtagId로 MemoHashtag에서 LEFT JOIN
     const selectedHashtag = await this.hashtagRepository.findOne({
       where: { keyword: hashtag },
     });
     if (!selectedHashtag) throw HashtagNotFoundException();
-    const resultArray = await this.memoHashtagRepository.getMemoListByHashtag(
+    const resultObject = await this.memoHashtagRepository.getMemoListByHashtag(
       userId,
       selectedHashtag.hashtagId,
       (page - 1) * 10,
     );
+    const resultArray = resultObject.resultArray;
+    const totalResults = Number(resultObject.totalResults[0].total_results);
+
     if (resultArray.length == 0) throw MemoNotFoundException();
-    return await this.processMemoList(resultArray);
+    const memoList = await this.processMemoList(resultArray);
+
+    return MemoResWithPagesDto.makeRes(
+      totalResults,
+      memoList.length,
+      page,
+      memoList,
+    );
   }
 
   async getMemoListByBookshelfBook(

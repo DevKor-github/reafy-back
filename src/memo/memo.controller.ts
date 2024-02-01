@@ -25,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiFile } from 'src/common/decorator/apis.decorator';
 import { UpdateMemoDto } from './dtos/UpdateMemo.dto';
-import { MemoResDto } from './dtos/MemoRes.dto';
+import { MemoResDto, MemoResWithPagesDto } from './dtos/MemoRes.dto';
 
 @ApiTags('Memo')
 @ApiBearerAuth('accessToken')
@@ -43,8 +43,8 @@ export class MemoController {
   @ApiOkResponse({
     description:
       '현재 유저 id로 작성된 모든 메모를 가져옵니다. 크기 10의 pagination. 가장 최근에 작성된 것 부터 반환. 이미지는 서버 주소/imageURL로 접근 가능.',
-    isArray: true,
-    type: MemoResDto,
+    isArray: false,
+    type: MemoResWithPagesDto,
   })
   @Get('')
   async getMemoList(@Req() req: Request, @Query('page') page: number) {
@@ -57,8 +57,8 @@ export class MemoController {
   @ApiOkResponse({
     description:
       'string으로 특정 Hashtag를 Query로 받아, 해당하는 hashtag를 가진 메모를 가져옵니다. 세부 사항은 전체 메모 반환과 동일',
-    isArray: true,
-    type: MemoResDto,
+    isArray: false,
+    type: MemoResWithPagesDto,
   })
   @Get('hashtag')
   async getMemoListByHashtag(
@@ -79,8 +79,8 @@ export class MemoController {
   @ApiOkResponse({
     description:
       'bookshelfBookId를 Query로 받아, 해당 책에 작성된 메모를 가져옵니다. 세부 사항은 동일합니다.',
-    isArray: true,
-    type: MemoResDto,
+    isArray: false,
+    type: MemoResWithPagesDto,
   })
   @Get('bookshelfbook')
   async getMemoListByBookshelfBook(
