@@ -39,7 +39,7 @@ export class BookController {
   @ApiOperation({
     summary: '책 검색하기',
     description:
-      '검색어 Query와 Page를 받아 알라딘 APi를 통한 검색 결과를 노출합니다. 페이지는 10개 단위로 주어지며, 응답은 SearchBookResDto의 리스트 형태로 주어집니다.',
+      '검색어 Query와 Page를 받아 알라딘 APi를 통한 검색 결과를 노출합니다. 페이지는 10개 단위로 주어짐. 응답은 SearchBookResWithPages의 형태, item은 SearchBookRes의 Array로 구성.',
   })
   @ApiOkResponse({
     description: '검색 결과 출력',
@@ -48,7 +48,7 @@ export class BookController {
   })
   @Get('/search') // Return : 검색 결과 리스트(10개 단위)
   async searchBook(
-    @Req() req,
+    @Req() req: Request,
     @Query('query') query: string,
     @Query('page') page: number = 1,
   ) {

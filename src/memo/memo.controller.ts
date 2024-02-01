@@ -42,7 +42,7 @@ export class MemoController {
   })
   @ApiOkResponse({
     description:
-      '현재 유저 id로 작성된 모든 메모를 가져옵니다. 크기 10의 pagination. 가장 최근에 작성된 것 부터 반환. 이미지는 서버 주소/imageURL로 접근 가능.',
+      '현재 유저 id로 작성된 모든 메모를 가져옵니다. 크기 10의 pagination. 가장 최근에 작성된 것 부터 반환. 이미지는 서버 주소/imageURL로 접근 가능. MemoResWithPagesDto의 형태, item은 MemoResDto의 Array.',
     isArray: false,
     type: MemoResWithPagesDto,
   })
