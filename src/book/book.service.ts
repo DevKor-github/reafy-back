@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios/dist';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { Inject, Injectable, LoggerService, Search } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { BookshelfBookDto } from 'src/book/dto/BookshelfBook.dto';
 import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
@@ -39,6 +39,7 @@ export class BookService {
     const resultArray = await this.httpService.axiosRef.get(
       `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Cover=Big&Version=20131101&start=${page}`,
     );
+    //query로 들어가는 건 문자열 취급..
     if (resultArray.data.errorCode) {
       this.logger.error(
         '## cannot get book info from aladin api',
@@ -55,15 +56,12 @@ export class BookService {
     //원랜 SearchBookList에 들어간 아이템 수를 세려고 했으나 pending처리 되었기 때문에 0으로 나타났음.
     //컨트롤러 단에서 await하면서 처리되는 것으로 보임.
 
-    const searchBookResWithPages: SearchBookResWithPagesDto = {
-      totalResults: resultArray.data.totalResults,
-      itemPerPage: resultArray.data.item.length,
-      totalPages: Math.ceil(resultArray.data.totalResults / 10),
-      currentPage: resultArray.data.startIndex,
-      item: SearchBookList,
-    };
-
-    return searchBookResWithPages;
+    return SearchBookResWithPagesDto.makeRes(
+      resultArray.data.totalResults,
+      resultArray.data.item.length,
+      Number(page),
+      SearchBookList,
+    );
   }
 
   //내부 책 DB 등록

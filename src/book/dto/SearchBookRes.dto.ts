@@ -32,10 +32,10 @@ export class SearchBookResDto {
 
 export class SearchBookResWithPagesDto {
   @ApiProperty({ description: '해당 검색의 총 결과 수' })
-  totalResults: number;
+  totalItems: number;
 
   @ApiProperty({ description: '현재 페이지의 아이템 수' })
-  itemPerPage: number;
+  currentItems: number;
 
   @ApiProperty({ description: '해당 검색의 총 페이지 수' })
   totalPages: number;
@@ -45,4 +45,20 @@ export class SearchBookResWithPagesDto {
 
   @ApiProperty({ description: '현재 페이지의 아이템 목록' })
   item: SearchBookResDto[];
+
+  static makeRes(
+    totalResults: number,
+    currentResults: number,
+    currentPage: number,
+    item: SearchBookResDto[],
+  ) {
+    const resData: SearchBookResWithPagesDto = {
+      totalItems: totalResults,
+      currentItems: currentResults,
+      totalPages: Math.ceil(totalResults / 10),
+      currentPage: currentPage,
+      item: item,
+    };
+    return resData;
+  }
 }
