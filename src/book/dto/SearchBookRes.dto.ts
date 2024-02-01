@@ -29,3 +29,20 @@ export class SearchBookResDto {
     return resData;
   }
 }
+
+export class SearchBookResWithPagesDto {
+  @ApiProperty({ description: '해당 검색의 총 결과 수' })
+  totalResults: number;
+
+  @ApiProperty({ description: '현재 페이지의 아이템 수' })
+  itemPerPage: number;
+
+  @ApiProperty({ description: '해당 검색의 총 페이지 수' })
+  totalPages: number;
+
+  @ApiProperty({ description: '현재 조회한 페이지' })
+  currentPage: number;
+
+  @ApiProperty({ description: '현재 페이지의 아이템 목록' })
+  item: SearchBookResDto[];
+}

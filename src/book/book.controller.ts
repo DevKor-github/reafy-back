@@ -19,7 +19,10 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { SearchBookResDto } from './dto/SearchBookRes.dto';
+import {
+  SearchBookResDto,
+  SearchBookResWithPagesDto,
+} from './dto/SearchBookRes.dto';
 import { BookshelfBookDetailDto } from './dto/BookshelfBookDetail.dto';
 import { BookshelfBookDto } from './dto/BookshelfBook.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -40,8 +43,8 @@ export class BookController {
   })
   @ApiOkResponse({
     description: '검색 결과 출력',
-    type: SearchBookResDto,
-    isArray: true,
+    type: SearchBookResWithPagesDto,
+    isArray: false,
   })
   @Get('/search') // Return : 검색 결과 리스트(10개 단위)
   async searchBook(
