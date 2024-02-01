@@ -147,17 +147,31 @@ export class BookService {
 
     if (bookExist) {
       //책이 DB에 존재 -> 책장에 존재하는 지 체크
-      const bookshelfBookExist = await this.bookRepository.findOne({
-        where: { bookId: bookExist.bookId },
+      const bookshelfBookExist = await this.bookshelfRepository.findOne({
+        where: { userId: userId, bookId: bookExist.bookId },
+        withDeleted: true,
       });
+      console.log(bookshelfBookExist);
       if (bookshelfBookExist) {
-        //책장에 존재 -> Error
-        this.logger.error(
-          `## book is exist userId : ${userId}, progressState : ${JSON.stringify(
-            userBookItems,
-          )}`,
+        if (bookshelfBookExist.deletedAt == null) {
+          //책장에 존재 -> Error
+          this.logger.error(
+            `## book is exist userId : ${userId}, progressState : ${JSON.stringify(
+              userBookItems,
+            )}`,
+          );
+          throw AlreadyBookExistException();
+        }
+        //삭제되었던 책이라면 restore 후 update로 호출
+        await this.bookshelfRepository.restore(
+          bookshelfBookExist.bookshelfBookId,
         );
-        throw AlreadyBookExistException();
+        console.log(`${bookshelfBookExist.bookshelfBookId} has just restored!`);
+        return await this.updateBookshelfBook(
+          userId,
+          bookshelfBookExist.bookshelfBookId,
+          userBookItems.progressState,
+        );
       }
       const bookshelfInfo = await this.bookshelfRepository.save({
         userId: userId,
