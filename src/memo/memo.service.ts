@@ -1,7 +1,7 @@
 import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { CreateMemoDto } from './dtos/CreateMemo.dto';
 import { UpdateMemoDto } from './dtos/UpdateMemo.dto';
-import { MemoResDto } from './dtos/MemoRes.dto';
+import { MemoResDto, MemoResWithPagesDto } from './dtos/MemoRes.dto';
 import { MemoRepository } from './repository/memo.repository';
 import { MemoHashtagRepository } from './repository/memo-hashtag.repository';
 import { HashtagRepository } from './repository/hashtag.repository';
@@ -18,12 +18,21 @@ export class MemoService {
     private readonly memoRepository: MemoRepository,
     private readonly memoHashtagRepository: MemoHashtagRepository,
     private readonly hashtagRepository: HashtagRepository,
-    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
   ) {}
 
-  async getMemoList(userId: number, page: number): Promise<MemoResDto[]> {
+  async getMemoList(
+    userId: number,
+    page: number,
+  ): Promise<MemoResWithPagesDto> {
     const memoList = [];
-    const resultArray = await this.memoRepository.getMemoListById(userId, page);
+    const resultObject = await this.memoRepository.getMemoListById(
+      userId,
+      page,
+    );
+    const resultArray = resultObject.resultArray;
+
     if (resultArray.length == 0) throw MemoNotFoundException();
     await Promise.all(
       resultArray.map(async (memo) => {
@@ -31,7 +40,14 @@ export class MemoService {
         memoList.push(await MemoResDto.makeRes(memo, hashtags));
       }),
     );
-    return memoList.sort((a, b) => b.createdAt - a.createdAt); //promise.all + map은 순서가 보장되지 않으므로 다시 sorting
+    memoList.sort((a, b) => b.createdAt - a.createdAt); //promise.all + map은 순서가 보장되지 않으므로 다시 sorting
+
+    return MemoResWithPagesDto.makeRes(
+      resultObject.totalResults,
+      resultArray.length,
+      page,
+      memoList,
+    );
   }
 
   async processMemoList(resultArray: any): Promise<MemoResDto[]> {
@@ -73,15 +89,22 @@ export class MemoService {
     userId: number,
     bookshelfBookId: number,
     page: number,
-  ) {
-    const resultArray = await this.memoRepository.getMemoListByBookshelfBookId(
+  ): Promise<MemoResWithPagesDto> {
+    const resultObject = await this.memoRepository.getMemoListByBookshelfBookId(
       userId,
       bookshelfBookId,
       (page - 1) * 10,
     );
+    const resultArray = resultObject.resultArray;
     if (resultArray.length == 0) throw MemoNotFoundException();
 
-    return await this.processMemoList(resultArray);
+    // return await this.processMemoList(resultArray);
+    return MemoResWithPagesDto.makeRes(
+      resultObject.totalResults,
+      resultArray.length,
+      page,
+      await this.processMemoList(resultArray),
+    );
   }
 
   async getHashtagsByMemoId(memoId: number): Promise<string[]> {
