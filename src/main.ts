@@ -13,7 +13,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   const config = new DocumentBuilder()
-    .setTitle('Reafy API')
+    .setTitle('Reafy API for TEST')
     .setDescription('Reafy API specification. 모든 시간은 UTC 기준입니다.')
     .setVersion('1.0')
     .addBearerAuth(
@@ -40,6 +40,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  await app.listen(3000);
+  await app.listen(3001);
 }
 bootstrap();
