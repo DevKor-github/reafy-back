@@ -19,7 +19,8 @@ export class CreateUserBookHistoryDto {
   @IsNumber()
   duration: number; //단위 s
 
-  @ApiProperty({ description: '얻은 코인 수' })
+  //비활성화
+  /*@ApiProperty({ description: '얻은 코인 수' })
   @IsNumber()
-  coins: number; //얻은 코인 수
+  coins: number; //얻은 코인 수*/
 }

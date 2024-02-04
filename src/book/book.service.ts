@@ -129,6 +129,8 @@ export class BookService {
     const startPage = firstHistory ? firstHistory.startPage : 0;
     const endPage = lastHistory ? lastHistory.endPage : 0;
 
+    console.log(resultArray[0]);
+
     return await BookshelfBookDetailDto.makeRes(
       resultArray[0],
       startPage,

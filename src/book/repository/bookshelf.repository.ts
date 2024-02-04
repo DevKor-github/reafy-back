@@ -14,8 +14,8 @@ export class BookShelfRepository extends Repository<BookshelfBook> {
       SELECT *
       FROM bookshelf_book
       LEFT JOIN book ON book.book_id = bookshelf_book.book_id
-      WHERE bookshelf_book.user_id = ${userId} AND bookshelf_book.bookshelf_book_id = ${bookshelfBookId} AND bookshelf_book.deleted_at IS NULL;
+      WHERE bookshelf_book.user_id = ${userId} AND bookshelf_book.bookshelf_book_id = ${bookshelfBookId};
       `,
-    );
+    ); //상세정보는 삭제되었다 하더라도 조회 가능하도록.
   }
 }
