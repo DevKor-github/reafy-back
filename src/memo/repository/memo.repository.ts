@@ -8,12 +8,24 @@ export class MemoRepository extends Repository<Memo> {
     super(Memo, dataSource.createEntityManager());
   }
   async getMemoListById(userId: number, page: number) {
-    return await this.find({
+    const totalResults = await this.count({ where: { userId } });
+    const resultArray = await this.find({
       where: { userId },
       order: { createdAt: 'DESC' },
       take: 10,
       skip: (page - 1) * 10,
     });
+
+    const resultObject = { totalResults, resultArray };
+
+    return resultObject;
+
+    // return await this.find({
+    //   where: { userId },
+    //   order: { createdAt: 'DESC' },
+    //   take: 10,
+    //   skip: (page - 1) * 10,
+    // });
   }
 
   async getMemoListByBookshelfBookId(
@@ -21,13 +33,19 @@ export class MemoRepository extends Repository<Memo> {
     bookshelfBookId: number,
     offset: number,
   ) {
-    return await this.query(`
-  SELECT * 
-  FROM memo
-  WHERE memo.bookshelf_book_id = ${bookshelfBookId} AND memo.user_id = ${userId} AND memo.deleted_at IS NULL
-  ORDER BY memo.created_at DESC
-  LIMIT 10 OFFSET ${offset};
-  `);
+    const totalResults = await this.count({
+      where: { bookshelfBookId: bookshelfBookId, userId: userId },
+    });
+    const resultArray = await this.query(`
+    SELECT * 
+    FROM memo
+    WHERE memo.bookshelf_book_id = ${bookshelfBookId} AND memo.user_id = ${userId} AND memo.deleted_at IS NULL
+    ORDER BY memo.created_at DESC
+    LIMIT 10 OFFSET ${offset};
+    `);
+    const resultObject = { totalResults, resultArray };
+
+    return resultObject;
   }
   //Soft Delete 체크.
 }

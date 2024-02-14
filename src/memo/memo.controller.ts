@@ -25,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiFile } from 'src/common/decorator/apis.decorator';
 import { UpdateMemoDto } from './dtos/UpdateMemo.dto';
-import { MemoResDto } from './dtos/MemoRes.dto';
+import { MemoResDto, MemoResWithPagesDto } from './dtos/MemoRes.dto';
 
 @ApiTags('Memo')
 @ApiBearerAuth('accessToken')
@@ -42,9 +42,9 @@ export class MemoController {
   })
   @ApiOkResponse({
     description:
-      '현재 유저 id로 작성된 모든 메모를 가져옵니다. 크기 10의 pagination. 가장 최근에 작성된 것 부터 반환. 이미지는 서버 주소/imageURL로 접근 가능.',
-    isArray: true,
-    type: MemoResDto,
+      '현재 유저 id로 작성된 모든 메모를 가져옵니다. 크기 10의 pagination이므로 query로 조회할 페이지를 보내주세요. 가장 최근에 작성된 것 부터 반환. 이미지는 서버 주소/imageURL로 접근 가능. MemoResWithPagesDto의 형태, item은 MemoResDto의 Array. 이거 형태는 아래 스키마 참고해주세요',
+    isArray: false,
+    type: MemoResWithPagesDto,
   })
   @Get('')
   async getMemoList(@Req() req: Request, @Query('page') page: number) {
@@ -56,9 +56,9 @@ export class MemoController {
   @ApiOperation({ summary: '해시태그에 해당하는 모든 메모 가져오기' })
   @ApiOkResponse({
     description:
-      'string으로 특정 Hashtag를 Query로 받아, 해당하는 hashtag를 가진 메모를 가져옵니다. 세부 사항은 전체 메모 반환과 동일',
-    isArray: true,
-    type: MemoResDto,
+      'string으로 특정 Hashtag를 Query로 받아, 해당하는 hashtag를 가진 메모를 가져옵니다. 세부 사항은 전체 메모 반환과 동일해요~',
+    isArray: false,
+    type: MemoResWithPagesDto,
   })
   @Get('hashtag')
   async getMemoListByHashtag(
@@ -79,8 +79,8 @@ export class MemoController {
   @ApiOkResponse({
     description:
       'bookshelfBookId를 Query로 받아, 해당 책에 작성된 메모를 가져옵니다. 세부 사항은 동일합니다.',
-    isArray: true,
-    type: MemoResDto,
+    isArray: false,
+    type: MemoResWithPagesDto,
   })
   @Get('bookshelfbook')
   async getMemoListByBookshelfBook(
@@ -101,7 +101,7 @@ export class MemoController {
   @ApiOperation({
     summary: '메모를 작성합니다.',
     description:
-      "form-data 형태로 메모가 작성됩니다. Hashtag는 '경영', '경제' 와 같이, ', '를 구분자로 하는 string 형태로 주어져야 합니다.",
+      "form-data 형태로 메모가 작성됩니다. Hashtag는 경영, 경제 <- 처럼, ', '를 구분자로 하는 string 형태로 주어져야 합니다.",
   })
   @ApiFile('create', 'file')
   @ApiCreatedResponse({
@@ -138,7 +138,7 @@ export class MemoController {
   @ApiOperation({
     summary: '메모 수정하기',
     description:
-      "form-data 형태로 메모가 작성됩니다. Hashtag는 '경영', '경제' 와 같이, ', '를 구분자로 하는 string 형태로 주어져야 합니다. 수정 사항이 없는 항목에는 원래 정보를 기입해 주세요(덮어쓰기)",
+      "form-data 형태로 메모가 작성됩니다. Hashtag는 경영, 경제 <- 처럼, ', '를 구분자로 하는 string 형태로 주어져야 합니다. 수정 사항이 없는 항목에는 원래 정보를 기입해 주세요(덮어쓰기 구조)",
   })
   @ApiFile('update', 'file')
   @ApiOkResponse({

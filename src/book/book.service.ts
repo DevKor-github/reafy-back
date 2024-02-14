@@ -1,10 +1,13 @@
 import { HttpService } from '@nestjs/axios/dist';
-import { Inject, Injectable, LoggerService } from '@nestjs/common';
+import { Inject, Injectable, LoggerService, Search } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { BookshelfBookDto } from 'src/book/dto/BookshelfBook.dto';
 import { RegisterBookDto } from 'src/book/dto/RegisterBook.dto';
 import { SaveInBookshelfReqDto } from 'src/book/dto/SaveInBookshelfReq.dto';
-import { SearchBookResDto } from 'src/book/dto/SearchBookRes.dto';
+import {
+  SearchBookResDto,
+  SearchBookResWithPagesDto,
+} from 'src/book/dto/SearchBookRes.dto';
 import {
   AlreadyBookExistException,
   ApiAccessErrorException,
@@ -29,10 +32,14 @@ export class BookService {
   ) {}
 
   //검색어와 pagination으로 검색 결과 반환
-  async searchBook(query: string, page: number): Promise<SearchBookResDto[]> {
+  async searchBook(
+    query: string,
+    page: number,
+  ): Promise<SearchBookResWithPagesDto> {
     const resultArray = await this.httpService.axiosRef.get(
       `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${process.env.ALADIN_API_KEY}&Query=${query}&output=js&Cover=Big&Version=20131101&start=${page}`,
     );
+    //query로 들어가는 건 문자열 취급..
     if (resultArray.data.errorCode) {
       this.logger.error(
         '## cannot get book info from aladin api',
@@ -40,12 +47,21 @@ export class BookService {
       );
       throw ApiAccessErrorException();
     }
-
     let SearchBookList: SearchBookResDto[] = [];
     resultArray.data.item.map(async (item) => {
       SearchBookList.push(await SearchBookResDto.makeRes(item));
     });
-    return SearchBookList;
+
+    //console.log(SearchBookList);
+    //원랜 SearchBookList에 들어간 아이템 수를 세려고 했으나 pending처리 되었기 때문에 0으로 나타났음.
+    //컨트롤러 단에서 await하면서 처리되는 것으로 보임.
+
+    return SearchBookResWithPagesDto.makeRes(
+      resultArray.data.totalResults,
+      resultArray.data.item.length,
+      Number(page),
+      SearchBookList,
+    );
   }
 
   //내부 책 DB 등록
@@ -133,17 +149,31 @@ export class BookService {
 
     if (bookExist) {
       //책이 DB에 존재 -> 책장에 존재하는 지 체크
-      const bookshelfBookExist = await this.bookRepository.findOne({
-        where: { bookId: bookExist.bookId },
+      const bookshelfBookExist = await this.bookshelfRepository.findOne({
+        where: { userId: userId, bookId: bookExist.bookId },
+        withDeleted: true,
       });
+      console.log(bookshelfBookExist);
       if (bookshelfBookExist) {
-        //책장에 존재 -> Error
-        this.logger.error(
-          `## book is exist userId : ${userId}, progressState : ${JSON.stringify(
-            userBookItems,
-          )}`,
+        if (bookshelfBookExist.deletedAt == null) {
+          //책장에 존재 -> Error
+          this.logger.error(
+            `## book is exist userId : ${userId}, progressState : ${JSON.stringify(
+              userBookItems,
+            )}`,
+          );
+          throw AlreadyBookExistException();
+        }
+        //삭제되었던 책이라면 restore 후 update로 호출
+        await this.bookshelfRepository.restore(
+          bookshelfBookExist.bookshelfBookId,
         );
-        throw AlreadyBookExistException();
+        console.log(`${bookshelfBookExist.bookshelfBookId} has just restored!`);
+        return await this.updateBookshelfBook(
+          userId,
+          bookshelfBookExist.bookshelfBookId,
+          userBookItems.progressState,
+        );
       }
       const bookshelfInfo = await this.bookshelfRepository.save({
         userId: userId,

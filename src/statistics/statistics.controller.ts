@@ -39,7 +39,7 @@ export class StatisticsController {
   @ApiOperation({ summary: '월별 총 독서 시간' })
   @ApiOkResponse({
     description:
-      '현재 유저의 월 별 총 독서 시간을 반환합니다. 분 단위로 주어집니다. 세부 사항은 같습니다.',
+      '현재 유저의 월 별 총 독서 시간을 반환합니다. 월별 분 단위로 주어집니다. 세부 사항은 같습니다.',
     type: MonthlyTotalReadingTimesListDto,
     isArray: true,
   })
@@ -57,7 +57,7 @@ export class StatisticsController {
   @ApiOperation({ summary: '오늘 독서 통계' })
   @ApiOkResponse({
     description:
-      '현재 유저의 오늘 독서 통계를 반환합니다. 분 단위로 주어집니다.',
+      '현재 유저의 오늘 독서 통계를 반환합니다. 독서 시간은 초 단위.',
     type: TodayStatisticsDto,
   })
   @Get('/today')
