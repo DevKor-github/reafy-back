@@ -32,7 +32,7 @@ export class HistoryController {
   @ApiOperation({
     summary: '독서 기록 조회',
     description:
-      '현재 유저의 전체 독서 기록을 조회합니다. 쿼리를 통해 특정 책의 독서 기록을 조회 가능합니다.',
+      '현재 유저의 전체 독서 기록을 조회합니다. 쿼리로 bookshelfbookId 받아서 특정 책의 독서 기록만 조회하는 것도 가능',
   })
   @ApiOkResponse({
     description: '현재 유저의 독서 기록 목록',
@@ -60,7 +60,8 @@ export class HistoryController {
   //책 히스토리 만들기 = 독서 기록 만들기
   @ApiOperation({
     summary: '독서 기록',
-    description: 'CreateUserBookHistoryDto를 받아 독서 기록을 저장합니다.',
+    description:
+      'CreateUserBookHistoryDto를 받아 독서 기록을 저장합니다. duration은 초 단위입니다',
   })
   @ApiCreatedResponse({
     description: '저장된 독서 기록 정보',

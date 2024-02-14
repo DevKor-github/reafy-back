@@ -39,7 +39,7 @@ export class BookController {
   @ApiOperation({
     summary: '책 검색하기',
     description:
-      '검색어 Query와 Page를 받아 알라딘 APi를 통한 검색 결과를 노출합니다. 페이지는 10개 단위로 주어짐. 응답은 SearchBookResWithPages의 형태, item은 SearchBookRes의 Array로 구성.',
+      '검색어 Query와 Page를 받아 알라딘 APi를 통한 검색 결과를 노출합니다. 페이지는 10개 단위로 주어짐. 응답은 SearchBookResWithPages의 형태, item은 SearchBookRes의 Array로 구성. 페이지 맨하단 schema 참고해주세요~',
   })
   @ApiOkResponse({
     description: '검색 결과 출력',
@@ -58,7 +58,7 @@ export class BookController {
   @ApiOperation({
     summary: '책장에 책 등록하기',
     description:
-      'SaveInBookshelfReqDto에 정의된 정보를 POST하여, 해당 책을 유저 책장에 추가합니다. 저장된 책의 정보가 응답 정보로 주어집니다.',
+      'SaveInBookshelfReqDto에 정의된 정보를 POST하여, 해당 책을 유저 책장에 추가합니다. 저장된 책의 정보(BookshelfBookDetailDto)가 응답 정보로 주어집니다.',
   })
   @ApiCreatedResponse({
     description: '책장에 책 등록',
@@ -148,7 +148,7 @@ export class BookController {
   @ApiOperation({
     summary: '책장 책 삭제하기',
     description:
-      '특정 BookshelfBookId를 Param으로 받아, 해당하는 책을 내 책장에서 삭제합니다.',
+      '특정 BookshelfBookId를 Param으로 받아, 해당하는 책을 내 책장에서 삭제합니다. 논리 삭제라서 다시 추가하면 이전의 책 상태 복구.',
   })
   @ApiOkResponse({
     description: '삭제된 책 정보 출력',
