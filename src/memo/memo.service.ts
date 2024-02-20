@@ -206,7 +206,7 @@ export class MemoService {
     if (!existingMemo) throw MemoNotFoundException();
 
     existingMemo.content = content;
-    existingMemo.page = page;
+    existingMemo.page = Number(page);
     existingMemo.imageURL = file ? file.path : null;
     await this.memoRepository.save(existingMemo); //메모 내용, 페이지, 이미지 업데이트
 
