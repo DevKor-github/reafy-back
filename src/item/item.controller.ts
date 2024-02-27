@@ -14,7 +14,7 @@ export class ItemController {
 
     @ApiOperation({
         summary: 'item list api',
-        description: 'user 소유하고 있는 item list',
+        description: 'user 소유하고 있는 item list ',
     })
     @ApiOkResponse({
         description: 'user 소유하고 있는 item list return',
