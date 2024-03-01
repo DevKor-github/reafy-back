@@ -10,6 +10,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { MemoRepository } from './repository/memo.repository';
 import { MemoHashtagRepository } from './repository/memo-hashtag.repository';
 import { HashtagRepository } from './repository/hashtag.repository';
+import { diskStorage } from 'multer';
 
 @Module({
   controllers: [MemoController],
@@ -22,7 +23,18 @@ import { HashtagRepository } from './repository/hashtag.repository';
   imports: [
     TypeOrmModule.forFeature([Memo, MemoHashtag, Hashtag]),
     AuthenticationModule,
-    MulterModule.register({ dest: './upload/files' }),
+    MulterModule.register({
+      storage: diskStorage({
+        destination(req, file, callback) {
+          callback(null, './upload/files');
+        },
+        filename(req, file, callback) {
+          callback(null, `${new Date().getTime()}.jpg`);
+        },
+      }),
+    }),
   ],
 })
 export class MemoModule {}
+
+//{ dest: './upload/files' }
