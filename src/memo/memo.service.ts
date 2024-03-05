@@ -150,7 +150,6 @@ export class MemoService {
     file: Express.Multer.File,
   ): Promise<MemoResDto> {
     const { bookshelfBookId, content, page, hashtag } = createMemoDto; //id, page number화, hashtag 파싱.
-
     const createdMemo = await this.memoRepository.save({
       //메모 생성
       userId: userId,
@@ -206,7 +205,7 @@ export class MemoService {
     if (!existingMemo) throw MemoNotFoundException();
 
     existingMemo.content = content;
-    existingMemo.page = page;
+    existingMemo.page = Number(page);
     existingMemo.imageURL = file ? file.path : null;
     await this.memoRepository.save(existingMemo); //메모 내용, 페이지, 이미지 업데이트
 
