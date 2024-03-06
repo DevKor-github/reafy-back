@@ -128,14 +128,30 @@ export class BookService {
 
     const startPage = firstHistory ? firstHistory.startPage : 0;
     const endPage = lastHistory ? lastHistory.endPage : 0;
-
-    console.log(resultArray[0]);
+    const totalPagesRead = await this.getReadPagesSum(userId, bookshelfbookId);
 
     return await BookshelfBookDetailDto.makeRes(
       resultArray[0],
       startPage,
       endPage,
+      totalPagesRead,
     );
+  }
+
+  async getReadPagesSum(
+    userId: number,
+    bookshelfbookId: number,
+  ): Promise<number> {
+    const histories = await this.userBookHistoryRepository.find({
+      where: { userId: userId, bookshelfBookId: bookshelfbookId },
+    });
+    const pageSet = new Set();
+    for (var history of histories) {
+      for (var page = history.startPage; page <= history.endPage; page++) {
+        pageSet.add(page);
+      }
+    }
+    return pageSet.size;
   }
 
   //검색 결과에서 isbn13을 이용해 유저 책장에 저장
