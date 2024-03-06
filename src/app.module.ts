@@ -29,7 +29,8 @@ import { UserModule } from './user/user.module';
       database: process.env.DB_DATABASE,
       autoLoadEntities: true, //자동으로 엔티티 load
       synchronize: true, //개발 중에만 쓰고, 실제 프로덕트에선 끄기
-      logging: true, // 자동으로 쿼리문과 에러 로깅
+      logging: true, // 자동으로 쿼리문과 에러 로깅,
+      timezone: 'Asia/Seoul',
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', ''),
@@ -41,7 +42,8 @@ import { UserModule } from './user/user.module';
           format: winston.format.combine(
             winston.format.timestamp(), // 로그 남긴 시각 표시
             winston.format.ms(),
-            utilities.format.nestLike('Reafy', {  // 로그 출처인 appName('Reafy') 설정
+            utilities.format.nestLike('Reafy', {
+              // 로그 출처인 appName('Reafy') 설정
               colors: true,
               prettyPrint: true,
             }),
@@ -63,7 +65,6 @@ import { UserModule } from './user/user.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes("*");
-
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

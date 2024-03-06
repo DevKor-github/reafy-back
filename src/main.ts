@@ -14,7 +14,9 @@ async function bootstrap() {
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   const config = new DocumentBuilder()
     .setTitle('Reafy API for TEST')
-    .setDescription('Reafy API specification. 모든 시간은 UTC 기준입니다.')
+    .setDescription(
+      'Reafy API specification. 시간은 한국 표준시(KST)를 따릅니다.',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
