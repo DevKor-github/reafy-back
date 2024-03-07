@@ -1,18 +1,23 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
 import {
   BaseException,
   InternalServerException,
+  UndefinedException,
 } from '../exception/base.exception';
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
-    const customException =
-      exception instanceof BaseException
-        ? exception
-        : InternalServerException();
-
+    let customException: BaseException;
+    if (exception instanceof BaseException) {
+      customException = exception;
+    } else if (exception instanceof HttpException) { // built-in exception 대응
+      customException = UndefinedException(exception?.getStatus(), JSON.stringify(exception?.getResponse()));
+    } else {
+      customException = InternalServerException();
+    }
+    
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();

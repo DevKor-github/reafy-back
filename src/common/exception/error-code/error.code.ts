@@ -36,6 +36,7 @@ export enum ErrorCodeEnum {
   HASHTAG_NOT_FOUND = '0302',
   HISTORY_NOT_FOUND = '0401',
   NOT_ENOUGH_COIN = '0501',
+  UNDEFINED_EXCEPTION = '9999',
 }
 
 export const INTERNAL_SERVER_ERROR = new ErrorCodeObject(
