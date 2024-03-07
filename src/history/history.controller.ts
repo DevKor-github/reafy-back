@@ -14,7 +14,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
-  ApiTags
+  ApiTags,
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
@@ -26,7 +26,7 @@ import { HistoryService } from './history.service';
 @ApiBearerAuth('accessToken')
 @UseGuards(AuthGuard('access'))
 export class HistoryController {
-  constructor(private readonly historyService: HistoryService) { }
+  constructor(private readonly historyService: HistoryService) {}
 
   @ApiOperation({
     summary: '독서 기록 조회',
@@ -43,7 +43,7 @@ export class HistoryController {
     required: false,
     description: '검색할 bookshelfBookId',
   })
-  @Get('/bookshelfbook')
+  @Get('')
   async getBookshelfBookHistory(
     @Req() req: Request,
     @Query('bookshelfbookid') bookshelfBookId: string,
@@ -56,11 +56,9 @@ export class HistoryController {
     return await this.historyService.getUserBookHistory(req.user.userId);
   }
 
-
   @ApiOperation({
     summary: '가장 최근 독서 기록 조회',
-    description:
-      '현재 유저의 최근 독서 기록을 조회합니다.',
+    description: '현재 유저의 최근 독서 기록을 조회합니다.',
   })
   @ApiOkResponse({
     description: '현재 유저의 최근 독서 기록',
@@ -76,11 +74,12 @@ export class HistoryController {
     @Req() req: Request,
     @Query('bookshelfbookid') bookshelfBookId: string,
   ) {
-    const userBookHistoryResDtoList = await this.historyService.getUserBookHistoryByBookshelfBook(
-      req.user.userId,
-      Number(bookshelfBookId));
+    const userBookHistoryResDtoList =
+      await this.historyService.getUserBookHistoryByBookshelfBook(
+        req.user.userId,
+        Number(bookshelfBookId),
+      );
     return userBookHistoryResDtoList[0];
-
   }
 
   //책 히스토리 만들기 = 독서 기록 만들기
@@ -93,7 +92,7 @@ export class HistoryController {
     description: '저장된 독서 기록 정보',
     type: UserBookHistory,
   })
-  @Post('/bookshelfbook')
+  @Post('')
   async createBookshelfBookHistory(
     @Req() req: Request, //Guard에서 유저 정보 추출하기
     @Body() createUserBookHistoryDto: CreateUserBookHistoryDto,
