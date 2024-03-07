@@ -1,33 +1,32 @@
 import {
-  Controller,
-  Post,
   Body,
+  Controller,
   Get,
+  Post,
+  Query,
   Req,
   UseGuards,
-  Query,
 } from '@nestjs/common';
-import { HistoryService } from './history.service';
-import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
-import { Request } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
-  ApiTags,
+  ApiTags
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
-import { AuthGuard } from '@nestjs/passport';
+import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
+import { HistoryService } from './history.service';
 
 @ApiTags('History')
 @Controller('history')
 @ApiBearerAuth('accessToken')
 @UseGuards(AuthGuard('access'))
 export class HistoryController {
-  constructor(private readonly historyService: HistoryService) {}
+  constructor(private readonly historyService: HistoryService) { }
 
   @ApiOperation({
     summary: '독서 기록 조회',
@@ -55,6 +54,33 @@ export class HistoryController {
         Number(bookshelfBookId),
       );
     return await this.historyService.getUserBookHistory(req.user.userId);
+  }
+
+
+  @ApiOperation({
+    summary: '가장 최근 독서 기록 조회',
+    description:
+      '현재 유저의 최근 독서 기록을 조회합니다.',
+  })
+  @ApiOkResponse({
+    description: '현재 유저의 최근 독서 기록',
+    type: UserBookHistory,
+  })
+  @ApiQuery({
+    name: 'bookshelfbookid',
+    required: true,
+    description: '검색할 bookshelfBookId',
+  })
+  @Get('/recentBookshelfbook')
+  async getRecentBookshelfBookHistory(
+    @Req() req: Request,
+    @Query('bookshelfbookid') bookshelfBookId: string,
+  ) {
+    const userBookHistoryResDtoList = await this.historyService.getUserBookHistoryByBookshelfBook(
+      req.user.userId,
+      Number(bookshelfBookId));
+    return userBookHistoryResDtoList[0];
+
   }
 
   //책 히스토리 만들기 = 독서 기록 만들기
