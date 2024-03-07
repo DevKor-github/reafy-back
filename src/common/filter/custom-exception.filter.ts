@@ -15,9 +15,12 @@ export class CustomExceptionFilter implements ExceptionFilter {
       customException = exception;
     } else if (exception instanceof HttpException) { // built-in exception 대응
       switch (exception?.getStatus()) {
-        case 401: customException = UnauthorizedUserException();
-        default: customException = UndefinedException(exception?.getStatus(), JSON.stringify(exception?.getResponse()));
-
+        case 401: 
+          customException = UnauthorizedUserException();
+          break;
+        default: 
+          customException = UndefinedException(exception?.getStatus(), JSON.stringify(exception?.getResponse()));
+          break;
       }
     } else {
       customException = InternalServerException();
