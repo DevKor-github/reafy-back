@@ -71,7 +71,7 @@ export class HistoryController {
     required: true,
     description: '검색할 bookshelfBookId',
   })
-  @Get('/recentBookshelfbook')
+  @Get('/recently')
   async getRecentBookshelfBookHistory(
     @Req() req: Request,
     @Query('bookshelfbookid') bookshelfBookId: string,
