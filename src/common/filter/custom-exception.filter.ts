@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { UnauthorizedUserException } from '../exception/authentication.exception';
 import {
   BaseException,
   InternalServerException,
@@ -13,11 +14,15 @@ export class CustomExceptionFilter implements ExceptionFilter {
     if (exception instanceof BaseException) {
       customException = exception;
     } else if (exception instanceof HttpException) { // built-in exception 대응
-      customException = UndefinedException(exception?.getStatus(), JSON.stringify(exception?.getResponse()));
+      switch (exception?.getStatus()) {
+        case 401: customException = UnauthorizedUserException();
+        default: customException = UndefinedException(exception?.getStatus(), JSON.stringify(exception?.getResponse()));
+
+      }
     } else {
       customException = InternalServerException();
     }
-    
+
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
