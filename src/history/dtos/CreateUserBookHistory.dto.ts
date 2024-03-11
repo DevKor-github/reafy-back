@@ -19,6 +19,10 @@ export class CreateUserBookHistoryDto {
   @IsNumber()
   duration: number; //단위 s
 
+  @ApiProperty({ description: '남은 타이머 시간(초 단위)' })
+  @IsNumber()
+  remainedTimer: number;
+
   //비활성화
   /*@ApiProperty({ description: '얻은 코인 수' })
   @IsNumber()

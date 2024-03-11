@@ -7,12 +7,14 @@ import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { UserBookHistoryResDto } from './dtos/UserBookHistoryRes.dto';
 import { UserBookHistoryRepository } from './repository/user-book-history.repository';
+import { UserRepository } from 'src/user/repository/user.repository';
 
 @Injectable()
 export class HistoryService {
   constructor(
     private readonly userBookHistoryRepository: UserBookHistoryRepository,
     private readonly bookshelfRepository: BookShelfRepository,
+    private readonly userRepository: UserRepository,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
   ) {}
@@ -68,10 +70,13 @@ export class HistoryService {
       );
       throw BookNotFoundException();
     }
+    await this.userRepository.update(userId, {
+      timer: createUserBookHistoryDto.remainedTimer,
+    });
     return UserBookHistoryResDto.makeRes(
       await this.userBookHistoryRepository.save({
         userId,
-        ...createUserBookHistoryDto,
+        ...createUserBookHistoryDto, //warning?
       }),
     );
   }
