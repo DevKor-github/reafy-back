@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
@@ -6,20 +6,20 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { StatisticsService } from './statistics.service';
 import { Request } from 'express';
 import {
   MonthlyTotalPagesListDto,
   MonthlyTotalReadingTimesListDto,
   TodayStatisticsDto,
 } from './dtos/Statistics.dto';
+import { StatisticsService } from './statistics.service';
 
 @ApiTags('Statistics')
 @ApiBearerAuth('accessToken')
 @UseGuards(AuthGuard('access'))
 @Controller('statistics')
 export class StatisticsController {
-  constructor(private readonly statisticsService: StatisticsService) {}
+  constructor(private readonly statisticsService: StatisticsService) { }
 
   @ApiOperation({ summary: '월별 읽은 페이지 수' })
   @ApiOkResponse({
@@ -28,7 +28,7 @@ export class StatisticsController {
     type: MonthlyTotalPagesListDto,
     isArray: true,
   })
-  @Get('/pages')
+  @Get('/monthly/pages')
   async getMonthlyTotalPages(@Req() req: Request, @Query('year') year: number) {
     return await this.statisticsService.getMonthlyTotalPages(
       req.user.userId,
@@ -43,7 +43,7 @@ export class StatisticsController {
     type: MonthlyTotalReadingTimesListDto,
     isArray: true,
   })
-  @Get('/times')
+  @Get('/monthly/times')
   async getMonthlyTotalReadingTimes(
     @Req() req: Request,
     @Query('year') year: number,
@@ -51,6 +51,27 @@ export class StatisticsController {
     return await this.statisticsService.getMonthlyTotalReadingTimes(
       req.user.userId,
       year,
+    );
+  }
+
+
+  @ApiOperation({ summary: '주별 총 독서 시간' })
+  @ApiOkResponse({
+    description:
+      '현재 유저의 주중 총 독서 시간을 반환합니다. 금주의 독서 시간이 분 단위로 주어집니다. 세부 사항은 같습니다.',
+    type: MonthlyTotalReadingTimesListDto,
+    isArray: true,
+  })
+  @Get('/weekly/times')
+  async getWeeklyTotalReadingTimes(
+    @Req() req: Request,
+    @Query('date') dateString: string,
+  ) {
+    const date = this.statisticsService.getDateYYYYMMDD(dateString);
+
+    return await this.statisticsService.getWeeklyTotalReadingTimes(
+      req.user.userId,
+      date,
     );
   }
 

@@ -36,6 +36,7 @@ export enum ErrorCodeEnum {
   HASHTAG_NOT_FOUND = '0302',
   HISTORY_NOT_FOUND = '0401',
   NOT_ENOUGH_COIN = '0501',
+  INVALID_DATE_FORMAT = '0601',
   UNDEFINED_EXCEPTION = '9999',
 }
 
@@ -134,4 +135,10 @@ export const NOT_ENOUGH_COIN = new ErrorCodeObject(
 
 //ItemService ErrorCode - none
 
-//StatisticsService ErrorCode - none
+//StatisticsService ErrorCode - 06
+export const INVALID_DATE_FORMAT = new ErrorCodeObject(
+  HttpStatus.BAD_REQUEST,
+  'Invalid Date Format',
+  ErrorCodeEnum.INVALID_DATE_FORMAT,
+); //0501
+

@@ -48,6 +48,19 @@ export class MonthlyTotalReadingTimesListDto {
   }
 }
 
+export class WeeklyTotalReadingTimesDto {
+  @ApiProperty({ description: '요청 날짜' })
+  requestDate: Date;
+
+  @ApiProperty({ description: '읽은 총 시간(분)' })
+  totalReadingTimes: number;
+
+  constructor(date, totalReadingTimes) {
+    this.requestDate = date;
+    this.totalReadingTimes = totalReadingTimes;
+  }
+}
+
 export class TodayStatisticsDto {
   @ApiProperty({ description: '유저 ID' })
   userId: number;
