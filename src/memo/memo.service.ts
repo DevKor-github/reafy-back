@@ -147,7 +147,7 @@ export class MemoService {
   async createMemo(
     userId: number,
     createMemoDto: CreateMemoDto,
-    file: Express.Multer.File,
+    file: Express.MulterS3.File,
   ): Promise<MemoResDto> {
     const { bookshelfBookId, content, page, hashtag } = createMemoDto; //id, page number화, hashtag 파싱.
     const createdMemo = await this.memoRepository.save({
@@ -156,7 +156,7 @@ export class MemoService {
       bookshelfBookId: Number(bookshelfBookId),
       content: content,
       page: Number(page),
-      imageURL: file ? file.path : null,
+      imageURL: file ? file.location : null,
     });
 
     const splitedHastags = hashtag.split(', '); //hashtag 파싱
@@ -192,7 +192,7 @@ export class MemoService {
     userId: number,
     memoId: number,
     updateMemoDto: UpdateMemoDto,
-    file: Express.Multer.File,
+    file: Express.MulterS3.File,
   ): Promise<MemoResDto> {
     const { content, page, hashtag } = updateMemoDto;
 
@@ -206,7 +206,7 @@ export class MemoService {
 
     existingMemo.content = content;
     existingMemo.page = Number(page);
-    existingMemo.imageURL = file ? file.path : null;
+    existingMemo.imageURL = file ? file.location : null;
     await this.memoRepository.save(existingMemo); //메모 내용, 페이지, 이미지 업데이트
 
     const splitedNewHastags = hashtag.split(', ');
