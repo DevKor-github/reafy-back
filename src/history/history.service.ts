@@ -43,12 +43,12 @@ export class HistoryService {
       where: { userId: userId, bookshelfBookId: bookshelfBookId },
       order: { createdAt: 'DESC' },
     });
-    if (resultArray.length == 0) {
-      this.logger.error(
-        `## can not find book history userId : ${userId}, bookshelfBookId : ${bookshelfBookId}`,
-      );
-      throw HistoryNotFound();
-    }
+    // if (resultArray.length == 0) {
+    //   this.logger.error(
+    //     `## can not find book history userId : ${userId}, bookshelfBookId : ${bookshelfBookId}`,
+    //   );
+    //   throw HistoryNotFound();
+    // }
     return this.processHistoryList(resultArray);
   }
 
