@@ -41,6 +41,7 @@ import { S3Client } from '@aws-sdk/client-s3';
             cb(null, `images/${Date.now()}.jpg`);
           },
         }),
+        limits: { fileSize: 5 * 1024 * 1024 },
       }),
     }),
   ],
