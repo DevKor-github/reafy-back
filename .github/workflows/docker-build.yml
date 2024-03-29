@@ -44,7 +44,7 @@ jobs:
           echo "DB_PORT=${{ secrets.DB_PORT}}" >> .env
           echo "DB_PASS=${{ secrets.DB_PASS}}" >> .env
           echo "DB_USER=${{ secrets.DB_USER}}" >> .env
-          echo "DB_DATABASE=${{ secrets.TEST_DB_DATABASE}}" >> .env
+          echo "TEST_DB_DATABASE=${{ secrets.TEST_DB_DATABASE}}" >> .env
           echo "ALADIN_API_KEY=${{ secrets.ALADIN_API_KEY}}" >> .env
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY}}" >> .env
           echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY}}" >> .env
