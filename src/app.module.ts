@@ -21,12 +21,12 @@ import { UserModule } from './user/user.module';
   imports: [
     ConfigModule.forRoot({ envFilePath: ['.env'], isGlobal: true }),
     TypeOrmModule.forRoot({
-      type: 'mysql',
+      type: 'mariadb',
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT),
       username: process.env.DB_USER,
       password: process.env.DB_PASS,
-      database: process.env.DB_DATABASE,
+      database: process.env.TEST_DB_DATABASE,
       autoLoadEntities: true, //자동으로 엔티티 load
       synchronize: true, //개발 중에만 쓰고, 실제 프로덕트에선 끄기
       logging: true, // 자동으로 쿼리문과 에러 로깅,

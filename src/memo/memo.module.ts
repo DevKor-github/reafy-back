@@ -10,7 +10,8 @@ import { MulterModule } from '@nestjs/platform-express';
 import { MemoRepository } from './repository/memo.repository';
 import { MemoHashtagRepository } from './repository/memo-hashtag.repository';
 import { HashtagRepository } from './repository/hashtag.repository';
-import { diskStorage } from 'multer';
+import * as multerS3 from 'multer-s3';
+import { S3Client } from '@aws-sdk/client-s3';
 
 @Module({
   controllers: [MemoController],
@@ -23,14 +24,23 @@ import { diskStorage } from 'multer';
   imports: [
     TypeOrmModule.forFeature([Memo, MemoHashtag, Hashtag]),
     AuthenticationModule,
-    MulterModule.register({
-      storage: diskStorage({
-        destination(req, file, callback) {
-          callback(null, './upload/files');
-        },
-        filename(req, file, callback) {
-          callback(null, `${new Date().getTime()}.jpg`);
-        },
+    MulterModule.registerAsync({
+      useFactory: async () => ({
+        storage: multerS3({
+          s3: new S3Client({
+            region: process.env.AWS_REGION,
+            credentials: {
+              accessKeyId: process.env.AWS_ACCESS_KEY,
+              secretAccessKey: process.env.AWS_SECRET_KEY,
+            },
+          }),
+          bucket: process.env.AWS_BUCKET_NAME,
+          // contentType: multerS3.AUTO_CONTENT_TYPE,
+          // acl: 'public-read',
+          key: function (req, file, cb) {
+            cb(null, `images/${Date.now()}.jpg`);
+          },
+        }),
       }),
     }),
   ],

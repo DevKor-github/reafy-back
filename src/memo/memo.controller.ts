@@ -26,6 +26,7 @@ import {
 import { ApiFile } from 'src/common/decorator/apis.decorator';
 import { UpdateMemoDto } from './dtos/UpdateMemo.dto';
 import { MemoResDto, MemoResWithPagesDto } from './dtos/MemoRes.dto';
+import { MulterS3 } from 'multer-s3';
 
 @ApiTags('Memo')
 @ApiBearerAuth('accessToken')
@@ -112,7 +113,7 @@ export class MemoController {
   async createMemo(
     @Req() req: Request,
     @Body() createMemoDto: CreateMemoDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.MulterS3.File,
   ) {
     return await this.memoService.createMemo(
       req.user.userId,
@@ -151,7 +152,7 @@ export class MemoController {
     @Req() req: Request,
     @Body() updateMemoDto: UpdateMemoDto,
     @Param('memoId') memoId: number,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.MulterS3.File,
   ) {
     return await this.memoService.updateMemo(
       req.user.userId,
