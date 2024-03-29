@@ -34,11 +34,11 @@ import { S3Client } from '@aws-sdk/client-s3';
               secretAccessKey: process.env.AWS_SECRET_KEY,
             },
           }),
-          bucket: process.env.AWS_TEST_BUCKET_NAME,
+          bucket: process.env.AWS_BUCKET_NAME,
           // contentType: multerS3.AUTO_CONTENT_TYPE,
           // acl: 'public-read',
           key: function (req, file, cb) {
-            cb(null, `${Date.now()}.jpg`);
+            cb(null, `images/${Date.now()}.jpg`);
           },
         }),
       }),
