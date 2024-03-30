@@ -270,14 +270,14 @@ export class BookService {
     const resultArray =
       await this.bookRepository.getFavoriteBookshelfBook(userId);
 
-    if (resultArray.length == 0) {
-      this.logger.error(
-        `## can not find book userId : ${userId}, resultArray : ${JSON.stringify(
-          resultArray,
-        )}`,
-      );
-      throw BookNotFoundException();
-    }
+    // if (resultArray.length == 0) {
+    //   this.logger.error(
+    //     `## can not find book userId : ${userId}, resultArray : ${JSON.stringify(
+    //       resultArray,
+    //     )}`,
+    //   );
+    //   throw BookNotFoundException();
+    // }
 
     const favoriteBookshelfBookList: BookshelfBookDto[] = resultArray.map(
       (book) => {
