@@ -33,7 +33,6 @@ export class MemoService {
     );
     const resultArray = resultObject.resultArray;
 
-    if (resultArray.length == 0) throw MemoNotFoundException();
     await Promise.all(
       resultArray.map(async (memo) => {
         const hashtags = await this.getHashtagsByMemoId(memo.memoId);
@@ -75,7 +74,7 @@ export class MemoService {
     const selectedHashtag = await this.hashtagRepository.findOne({
       where: { keyword: hashtag },
     });
-    if (!selectedHashtag) throw HashtagNotFoundException();
+    if (!selectedHashtag) throw HashtagNotFoundException(); //해당하는 해시태그가 존재하지 않는 경우
     const resultObject = await this.memoHashtagRepository.getMemoListByHashtag(
       userId,
       selectedHashtag.hashtagId,
@@ -84,7 +83,6 @@ export class MemoService {
     const resultArray = resultObject.resultArray;
     const totalResults = Number(resultObject.totalResults[0].total_results);
 
-    if (resultArray.length == 0) throw MemoNotFoundException();
     const memoList = await this.processMemoList(resultArray);
 
     return MemoResWithPagesDto.makeRes(
@@ -106,7 +104,6 @@ export class MemoService {
       (page - 1) * 10,
     );
     const resultArray = resultObject.resultArray;
-    if (resultArray.length == 0) throw MemoNotFoundException();
 
     // return await this.processMemoList(resultArray);
     return MemoResWithPagesDto.makeRes(
@@ -137,7 +134,7 @@ export class MemoService {
         memoId: memoId,
       },
     });
-    if (!memo) throw MemoNotFoundException();
+    if (!memo) throw MemoNotFoundException(); //해당 메모 ID로 검색되는 메모가 존재하지 않음
 
     const hashtags = await this.getHashtagsByMemoId(memoId);
 
@@ -202,7 +199,7 @@ export class MemoService {
       where: { memoId: memoId },
     });
 
-    if (!existingMemo) throw MemoNotFoundException();
+    if (!existingMemo) throw MemoNotFoundException(); //해당하는 ID의 메모가 존재하지 않음
 
     existingMemo.content = content;
     existingMemo.page = Number(page);
@@ -233,7 +230,7 @@ export class MemoService {
     const deletedMemo = await this.memoRepository.findOne({
       where: { memoId: memoId, userId: userId },
     });
-    if (!deletedMemo) throw MemoNotFoundException(); //Error;
+    if (!deletedMemo) throw MemoNotFoundException(); //해당하는 ID의 메모가 존재하지 않음
     await this.memoRepository.softDelete({ memoId: memoId, userId: userId });
     return `memoId : ${memoId} is deleted successfully`;
   }
