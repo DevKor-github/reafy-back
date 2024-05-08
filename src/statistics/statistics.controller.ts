@@ -13,13 +13,14 @@ import {
   TodayStatisticsDto,
 } from './dtos/Statistics.dto';
 import { StatisticsService } from './statistics.service';
+import { DateUtilService } from '../common/util/date.util';
 
 @ApiTags('Statistics')
 @ApiBearerAuth('accessToken')
 @UseGuards(AuthGuard('access'))
 @Controller('statistics')
 export class StatisticsController {
-  constructor(private readonly statisticsService: StatisticsService) { }
+  constructor(private readonly statisticsService: StatisticsService) {}
 
   @ApiOperation({ summary: '월별 읽은 페이지 수' })
   @ApiOkResponse({
@@ -54,7 +55,6 @@ export class StatisticsController {
     );
   }
 
-
   @ApiOperation({ summary: '주별 총 독서 시간' })
   @ApiOkResponse({
     description:
@@ -67,7 +67,7 @@ export class StatisticsController {
     @Req() req: Request,
     @Query('date') dateString: string,
   ) {
-    const date = this.statisticsService.getDateYYYYMMDD(dateString);
+    const date = DateUtilService.getDateYYYYMMDD(dateString);
 
     return await this.statisticsService.getWeeklyTotalReadingTimes(
       req.user.userId,
