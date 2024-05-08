@@ -1,6 +1,7 @@
+import { UserBookHistoryReqDto } from './../dtos/user-book-history-req.dto';
 import { Injectable } from '@nestjs/common';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThan, Repository } from 'typeorm';
 
 @Injectable()
 export class UserBookHistoryRepository extends Repository<UserBookHistory> {
@@ -46,6 +47,28 @@ export class UserBookHistoryRepository extends Repository<UserBookHistory> {
     return await this.findOne({
       where: { bookshelfBookId: bookshelfBookId },
       order: { endPage: 'DESC' },
+    });
+  }
+
+  async getPaginatedUserBookHistory(
+    userId: number,
+    userBookHistoryReqDto: UserBookHistoryReqDto,
+  ) {
+    const take = 10;
+    const { bookshelfBookId, cursorId } = userBookHistoryReqDto;
+    const whereOptions = { userId: userId };
+
+    if (bookshelfBookId) {
+      whereOptions['bookshelfBookId'] = bookshelfBookId;
+    }
+    if (cursorId) {
+      whereOptions['id'] = LessThan(cursorId);
+    }
+
+    return await this.findAndCount({
+      where: whereOptions,
+      order: { createdAt: 'DESC' },
+      take: take,
     });
   }
 }

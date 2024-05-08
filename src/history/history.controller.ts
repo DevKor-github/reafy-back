@@ -20,6 +20,7 @@ import { Request } from 'express';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { HistoryService } from './history.service';
+import { UserBookHistoryReqDto } from './dtos/user-book-history-req.dto';
 
 @ApiTags('History')
 @Controller('history')
@@ -46,14 +47,12 @@ export class HistoryController {
   @Get('')
   async getBookshelfBookHistory(
     @Req() req: Request,
-    @Query('bookshelfbookid') bookshelfBookId: string,
+    @Query() userBookHistoryReqDto: UserBookHistoryReqDto,
   ) {
-    if (bookshelfBookId)
-      return await this.historyService.getUserBookHistoryByBookshelfBook(
-        req.user.userId,
-        Number(bookshelfBookId),
-      );
-    return await this.historyService.getUserBookHistory(req.user.userId);
+    return await this.historyService.getUserBookHistory(
+      req.user.userId,
+      userBookHistoryReqDto,
+    );
   }
 
   @ApiOperation({

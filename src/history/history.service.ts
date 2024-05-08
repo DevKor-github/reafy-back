@@ -8,6 +8,7 @@ import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { UserBookHistoryResDto } from './dtos/UserBookHistoryRes.dto';
 import { UserBookHistoryRepository } from './repository/user-book-history.repository';
 import { UserRepository } from 'src/user/repository/user.repository';
+import { UserBookHistoryReqDto } from './dtos/user-book-history-req.dto';
 
 @Injectable()
 export class HistoryService {
@@ -19,20 +20,30 @@ export class HistoryService {
     private readonly logger: LoggerService,
   ) {}
 
-  async getUserBookHistory(userId: number): Promise<UserBookHistoryResDto[]> {
-    const resultArray = await this.userBookHistoryRepository.find({
-      where: { userId: userId },
-      order: { createdAt: 'DESC' },
-    });
-    if (resultArray.length == 0) {
-      this.logger.error(
-        `## getUserBookHistory can not find book userId : ${userId}, resultArray : ${JSON.stringify(
-          resultArray,
-        )}`,
+  async getUserBookHistory(
+    userId: number,
+    userBookHistoryReqDto: UserBookHistoryReqDto,
+  ): Promise<UserBookHistoryResDto[]> {
+    // if (userBookHistoryReqDto.bookshelfBookId) {
+    //   return await this.getUserBookHistoryByBookshelfBook(
+    //     userId,
+    //     userBookHistoryReqDto.bookshelfBookId,
+    //   );
+    // }
+    const resultArray =
+      await this.userBookHistoryRepository.getPaginatedUserBookHistory(
+        userId,
+        userBookHistoryReqDto,
       );
-      throw HistoryNotFound();
-    }
-    return this.processHistoryList(resultArray);
+    // if (resultArray[1] == 0) {
+    //   this.logger.error(
+    //     `## getUserBookHistory can not find book userId : ${userId}, resultArray : ${JSON.stringify(
+    //       resultArray,
+    //     )}`,
+    //   );
+    //   throw HistoryNotFound();
+    // } 리스트를 반환받을 때 NotFOund는 의도되지 않은 에러.
+    return this.processHistoryList(resultArray); //포맷 수정 필요
   }
 
   async getUserBookHistoryByBookshelfBook(
