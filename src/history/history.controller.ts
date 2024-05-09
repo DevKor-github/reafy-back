@@ -21,6 +21,8 @@ import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { HistoryService } from './history.service';
 import { UserBookHistoryReqDto } from './dtos/user-book-history-req.dto';
+import { UserBookHistoryResDto } from './dtos/UserBookHistoryRes.dto';
+import { PaginatedUserBookHistoryRes } from './dtos/paginated-user-book-history-res.dto';
 
 @ApiTags('History')
 @Controller('history')
@@ -36,8 +38,7 @@ export class HistoryController {
   })
   @ApiOkResponse({
     description: '현재 유저의 독서 기록 목록',
-    type: UserBookHistory,
-    isArray: true,
+    type: PaginatedUserBookHistoryRes,
   })
   @Get('')
   async getBookshelfBookHistory(
@@ -56,7 +57,7 @@ export class HistoryController {
   })
   @ApiOkResponse({
     description: '현재 유저의 최근 독서 기록',
-    type: UserBookHistory,
+    type: UserBookHistoryResDto,
   })
   @Get('/recently')
   async getRecentBookshelfBookHistory(
