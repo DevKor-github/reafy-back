@@ -54,7 +54,7 @@ export class UserBookHistoryRepository extends Repository<UserBookHistory> {
     userId: number,
     userBookHistoryReqDto: UserBookHistoryReqDto,
   ) {
-    const take = 10;
+    const take = 11;
     const { bookshelfBookId, cursorId } = userBookHistoryReqDto;
     const whereOptions = { userId: userId };
 
@@ -65,7 +65,7 @@ export class UserBookHistoryRepository extends Repository<UserBookHistory> {
       whereOptions['id'] = LessThan(cursorId);
     }
 
-    return await this.findAndCount({
+    return await this.find({
       where: whereOptions,
       order: { createdAt: 'DESC' },
       take: take,

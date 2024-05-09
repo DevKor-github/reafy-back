@@ -39,11 +39,6 @@ export class HistoryController {
     type: UserBookHistory,
     isArray: true,
   })
-  @ApiQuery({
-    name: 'bookshelfbookid',
-    required: false,
-    description: '검색할 bookshelfBookId',
-  })
   @Get('')
   async getBookshelfBookHistory(
     @Req() req: Request,
@@ -63,22 +58,15 @@ export class HistoryController {
     description: '현재 유저의 최근 독서 기록',
     type: UserBookHistory,
   })
-  @ApiQuery({
-    name: 'bookshelfbookid',
-    required: true,
-    description: '검색할 bookshelfBookId',
-  })
   @Get('/recently')
   async getRecentBookshelfBookHistory(
     @Req() req: Request,
-    @Query('bookshelfbookid') bookshelfBookId: string,
+    @Query() userBookHistoryReqDto: UserBookHistoryReqDto,
   ) {
-    const userBookHistoryResDtoList =
-      await this.historyService.getUserBookHistoryByBookshelfBook(
-        req.user.userId,
-        Number(bookshelfBookId),
-      );
-    return userBookHistoryResDtoList[0];
+    return await this.historyService.getRecentUserBookHistory(
+      req.user.userId,
+      userBookHistoryReqDto,
+    );
   }
 
   //책 히스토리 만들기 = 독서 기록 만들기

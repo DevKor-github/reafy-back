@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber } from 'class-validator';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
@@ -20,6 +22,9 @@ export class UserBookHistoryResDto {
   @IsNumber()
   endPage: number;
 
+  @ApiProperty({ description: '독서 기록 생성일' })
+  createdAt: string;
+
   @ApiProperty({ description: '독서 시간(초 단위)' })
   @IsNumber()
   duration: number;
@@ -31,6 +36,7 @@ export class UserBookHistoryResDto {
     resData.startPage = data.startPage;
     resData.endPage = data.endPage;
     resData.duration = data.duration;
+    resData.createdAt = format(data.createdAt, 'aaaa h시 m분', { locale: ko });
 
     return resData;
   }
