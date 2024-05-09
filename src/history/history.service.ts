@@ -55,6 +55,7 @@ export class HistoryService {
       whereOptions['bookshelfBookId'] = userBookHistoryReqDto.bookshelfBookId;
     const history = await this.userBookHistoryRepository.findOne({
       where: whereOptions,
+      order: { createdAt: 'DESC' },
     });
     return UserBookHistoryResDto.makeRes(history);
   }

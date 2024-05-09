@@ -62,13 +62,16 @@ export class UserBookHistoryRepository extends Repository<UserBookHistory> {
       whereOptions['bookshelfBookId'] = bookshelfBookId;
     }
     if (cursorId) {
-      whereOptions['id'] = LessThan(cursorId);
+      whereOptions['userBookHistoryId'] = LessThan(cursorId);
     }
-
-    return await this.find({
-      where: whereOptions,
-      order: { createdAt: 'DESC' },
-      take: take,
-    });
+    try {
+      return await this.find({
+        where: whereOptions,
+        order: { createdAt: 'DESC' },
+        take: take,
+      });
+    } catch (e) {
+      console.log(e);
+    }
   }
 }
