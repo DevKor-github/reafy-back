@@ -37,6 +37,7 @@ export enum ErrorCodeEnum {
   HISTORY_NOT_FOUND = '0401',
   NOT_ENOUGH_COIN = '0501',
   INVALID_DATE_FORMAT = '0601',
+  INVALID_QUEST_ID = '0701',
   UNDEFINED_EXCEPTION = '9999',
 }
 
@@ -142,3 +143,9 @@ export const INVALID_DATE_FORMAT = new ErrorCodeObject(
   ErrorCodeEnum.INVALID_DATE_FORMAT,
 ); //0501
 
+//StatisticsService ErrorCode - 06
+export const INVALID_QUEST_ID = new ErrorCodeObject(
+  HttpStatus.BAD_REQUEST,
+  'Request Id is not exist',
+  ErrorCodeEnum.INVALID_DATE_FORMAT,
+); //0501

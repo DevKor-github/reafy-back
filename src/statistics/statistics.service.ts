@@ -9,7 +9,6 @@ import {
   TodayStatisticsDto,
   WeeklyTotalReadingTimesDto,
 } from './dtos/Statistics.dto';
-import { InvalidDateFormatException } from 'src/common/exception/statistics-service.exception';
 
 @Injectable()
 export class StatisticsService {
@@ -17,7 +16,7 @@ export class StatisticsService {
     private readonly userBookHistoryRepository: UserBookHistoryRepository,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
-  ) { }
+  ) {}
 
   async getMonthlyTotalPages(
     userId: number,
@@ -59,19 +58,6 @@ export class StatisticsService {
     return monthlyTotalReadingTimesList;
   }
 
-  checkDateFormatYYYYMMDD(dateString : string) {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-    if (!dateRegex.test(dateString)) {
-      throw InvalidDateFormatException('Invalid date format. Date should be in YYYY-MM-DD format.');
-    }
-  }
-
-  getDateYYYYMMDD(dateString : string) : Date{
-    this.checkDateFormatYYYYMMDD(dateString);    
-    return new Date(dateString + 'T00:00:00Z');
-  }
-
   async getWeeklyTotalReadingTimes(
     userId: number,
     date: Date,
@@ -85,16 +71,18 @@ export class StatisticsService {
     let totalReadingTime = 0;
 
     const resultArray = await this.userBookHistoryRepository.find({
-      where: { userId: userId, createdAt: Between(startDate, lastDate) }
+      where: { userId: userId, createdAt: Between(startDate, lastDate) },
     });
 
     resultArray.forEach((userBookHistory: UserBookHistory) => {
       totalReadingTime += userBookHistory.duration;
-    })
-    const weeklyTotalReadingTimesDto = new WeeklyTotalReadingTimesDto(date, totalReadingTime);
+    });
+    const weeklyTotalReadingTimesDto = new WeeklyTotalReadingTimesDto(
+      date,
+      totalReadingTime,
+    );
     return weeklyTotalReadingTimesDto;
   }
-
 
   async getTodayStatistics(userId: number): Promise<TodayStatisticsDto> {
     const queryPacket =
