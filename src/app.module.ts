@@ -16,6 +16,7 @@ import { ItemModule } from './item/item.module';
 import { MemoModule } from './memo/memo.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { UserModule } from './user/user.module';
+import { QuestModule } from './quest/quest.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { UserModule } from './user/user.module';
     MemoModule,
     StatisticsModule,
     CoinModule,
+    QuestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
