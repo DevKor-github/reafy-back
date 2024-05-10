@@ -1,5 +1,6 @@
 import { UserBookHistoryReqDto } from './../dtos/user-book-history-req.dto';
 import { Injectable } from '@nestjs/common';
+import { HISTORY_LIST_TAKE } from 'src/common/constant/history.constant';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { DataSource, LessThan, Repository } from 'typeorm';
 
@@ -54,7 +55,7 @@ export class UserBookHistoryRepository extends Repository<UserBookHistory> {
     userId: number,
     userBookHistoryReqDto: UserBookHistoryReqDto,
   ) {
-    const take = 11;
+    const take = HISTORY_LIST_TAKE + 1;
     const { bookshelfBookId, cursorId } = userBookHistoryReqDto;
     const whereOptions = { userId: userId };
 

@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserBookHistoryReqDto {
-  @ApiProperty({ required: false })
+  @ApiProperty({ description: '책장 id', required: false })
   bookshelfBookId: number;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ description: '커서 id', required: false })
   cursorId: number;
 }

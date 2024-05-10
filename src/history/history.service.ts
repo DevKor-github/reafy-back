@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toDate } from 'date-fns-tz';
 import { PaginatedUserBookHistoryRes } from './dtos/paginated-user-book-history-res.dto';
+import { HISTORY_LIST_TAKE } from 'src/common/constant/history.constant';
 
 @Injectable()
 export class HistoryService {
@@ -34,10 +35,12 @@ export class HistoryService {
         userBookHistoryReqDto,
       );
     const userBookHistoryList = this.processHistoryList(
-      resultArray.slice(0, 10),
+      resultArray.slice(0, HISTORY_LIST_TAKE),
     );
-    const hasNextPage = resultArray.length == 11;
-    const cursorId = hasNextPage ? resultArray[9].userBookHistoryId : null;
+    const hasNextPage = resultArray.length == HISTORY_LIST_TAKE + 1;
+    const cursorId = hasNextPage
+      ? resultArray[HISTORY_LIST_TAKE - 1].userBookHistoryId
+      : null;
 
     return new PaginatedUserBookHistoryRes(
       userBookHistoryList,
@@ -51,8 +54,9 @@ export class HistoryService {
     userBookHistoryReqDto: UserBookHistoryReqDto,
   ): Promise<UserBookHistoryResDto> {
     const whereOptions = { userId: userId };
-    if (userBookHistoryReqDto.bookshelfBookId)
+    if (userBookHistoryReqDto.bookshelfBookId) {
       whereOptions['bookshelfBookId'] = userBookHistoryReqDto.bookshelfBookId;
+    }
     const history = await this.userBookHistoryRepository.findOne({
       where: whereOptions,
       order: { createdAt: 'DESC' },
