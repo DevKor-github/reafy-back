@@ -8,6 +8,12 @@ import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { UserBookHistoryResDto } from './dtos/UserBookHistoryRes.dto';
 import { UserBookHistoryRepository } from './repository/user-book-history.repository';
 import { UserRepository } from 'src/user/repository/user.repository';
+import { UserBookHistoryReqDto } from './dtos/user-book-history-req.dto';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { toDate } from 'date-fns-tz';
+import { PaginatedUserBookHistoryRes } from './dtos/paginated-user-book-history-res.dto';
+import { HISTORY_LIST_TAKE } from 'src/common/constant/history.constant';
 
 @Injectable()
 export class HistoryService {
@@ -19,39 +25,44 @@ export class HistoryService {
     private readonly logger: LoggerService,
   ) {}
 
-  async getUserBookHistory(userId: number): Promise<UserBookHistoryResDto[]> {
-    const resultArray = await this.userBookHistoryRepository.find({
-      where: { userId: userId },
-      order: { createdAt: 'DESC' },
-    });
-    if (resultArray.length == 0) {
-      this.logger.error(
-        `## getUserBookHistory can not find book userId : ${userId}, resultArray : ${JSON.stringify(
-          resultArray,
-        )}`,
-      );
-      throw HistoryNotFound();
-    }
-    return this.processHistoryList(resultArray);
-  }
-
-  async getUserBookHistoryByBookshelfBook(
+  async getUserBookHistory(
     userId: number,
-    bookshelfBookId: number,
-  ): Promise<UserBookHistoryResDto[]> {
-    const resultArray = await this.userBookHistoryRepository.find({
-      where: { userId: userId, bookshelfBookId: bookshelfBookId },
-      order: { createdAt: 'DESC' },
-    });
-    // if (resultArray.length == 0) {
-    //   this.logger.error(
-    //     `## can not find book history userId : ${userId}, bookshelfBookId : ${bookshelfBookId}`,
-    //   );
-    //   throw HistoryNotFound();
-    // }
-    return this.processHistoryList(resultArray);
+    userBookHistoryReqDto: UserBookHistoryReqDto,
+  ): Promise<PaginatedUserBookHistoryRes> {
+    const resultArray =
+      await this.userBookHistoryRepository.getPaginatedUserBookHistory(
+        userId,
+        userBookHistoryReqDto,
+      );
+    const userBookHistoryList = this.processHistoryList(
+      resultArray.slice(0, HISTORY_LIST_TAKE),
+    );
+    const hasNextPage = resultArray.length == HISTORY_LIST_TAKE + 1;
+    const cursorId = hasNextPage
+      ? resultArray[HISTORY_LIST_TAKE - 1].userBookHistoryId
+      : null;
+
+    return new PaginatedUserBookHistoryRes(
+      userBookHistoryList,
+      cursorId,
+      hasNextPage,
+    );
   }
 
+  async getRecentUserBookHistory(
+    userId,
+    userBookHistoryReqDto: UserBookHistoryReqDto,
+  ): Promise<UserBookHistoryResDto> {
+    const whereOptions = { userId: userId };
+    if (userBookHistoryReqDto.bookshelfBookId) {
+      whereOptions['bookshelfBookId'] = userBookHistoryReqDto.bookshelfBookId;
+    }
+    const history = await this.userBookHistoryRepository.findOne({
+      where: whereOptions,
+      order: { createdAt: 'DESC' },
+    });
+    return UserBookHistoryResDto.makeRes(history);
+  }
   async createUserBookHistory(
     userId: number,
     createUserBookHistoryDto: CreateUserBookHistoryDto,
@@ -81,11 +92,28 @@ export class HistoryService {
     );
   }
 
-  processHistoryList(resultArray: any): UserBookHistoryResDto[] {
-    const userBookHistoryList = [];
-    resultArray.map((history: UserBookHistory) => {
-      userBookHistoryList.push(UserBookHistoryResDto.makeRes(history));
+  processHistoryList(
+    resultArray: UserBookHistory[],
+  ): Record<string, UserBookHistoryResDto[]> {
+    const userBookHistoryList: Record<string, UserBookHistoryResDto[]> = {};
+
+    resultArray.forEach((history: UserBookHistory) => {
+      const createdAtInKST = toDate(history.createdAt, {
+        timeZone: 'Asia/Seoul',
+      });
+      const koFormat = format(createdAtInKST, 'yyyy년 M월 d일 EEEE', {
+        locale: ko,
+      });
+
+      if (!userBookHistoryList[koFormat]) {
+        userBookHistoryList[koFormat] = [];
+      }
+
+      userBookHistoryList[koFormat].push(
+        UserBookHistoryResDto.makeRes(history),
+      );
     });
+
     return userBookHistoryList;
   }
 }

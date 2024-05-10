@@ -20,6 +20,9 @@ import { Request } from 'express';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
 import { CreateUserBookHistoryDto } from './dtos/CreateUserBookHistory.dto';
 import { HistoryService } from './history.service';
+import { UserBookHistoryReqDto } from './dtos/user-book-history-req.dto';
+import { UserBookHistoryResDto } from './dtos/UserBookHistoryRes.dto';
+import { PaginatedUserBookHistoryRes } from './dtos/paginated-user-book-history-res.dto';
 
 @ApiTags('History')
 @Controller('history')
@@ -35,25 +38,17 @@ export class HistoryController {
   })
   @ApiOkResponse({
     description: '현재 유저의 독서 기록 목록',
-    type: UserBookHistory,
-    isArray: true,
-  })
-  @ApiQuery({
-    name: 'bookshelfbookid',
-    required: false,
-    description: '검색할 bookshelfBookId',
+    type: PaginatedUserBookHistoryRes,
   })
   @Get('')
   async getBookshelfBookHistory(
     @Req() req: Request,
-    @Query('bookshelfbookid') bookshelfBookId: string,
+    @Query() userBookHistoryReqDto: UserBookHistoryReqDto,
   ) {
-    if (bookshelfBookId)
-      return await this.historyService.getUserBookHistoryByBookshelfBook(
-        req.user.userId,
-        Number(bookshelfBookId),
-      );
-    return await this.historyService.getUserBookHistory(req.user.userId);
+    return await this.historyService.getUserBookHistory(
+      req.user.userId,
+      userBookHistoryReqDto,
+    );
   }
 
   @ApiOperation({
@@ -62,24 +57,17 @@ export class HistoryController {
   })
   @ApiOkResponse({
     description: '현재 유저의 최근 독서 기록',
-    type: UserBookHistory,
-  })
-  @ApiQuery({
-    name: 'bookshelfbookid',
-    required: true,
-    description: '검색할 bookshelfBookId',
+    type: UserBookHistoryResDto,
   })
   @Get('/recently')
   async getRecentBookshelfBookHistory(
     @Req() req: Request,
-    @Query('bookshelfbookid') bookshelfBookId: string,
+    @Query() userBookHistoryReqDto: UserBookHistoryReqDto,
   ) {
-    const userBookHistoryResDtoList =
-      await this.historyService.getUserBookHistoryByBookshelfBook(
-        req.user.userId,
-        Number(bookshelfBookId),
-      );
-    return userBookHistoryResDtoList[0];
+    return await this.historyService.getRecentUserBookHistory(
+      req.user.userId,
+      userBookHistoryReqDto,
+    );
   }
 
   //책 히스토리 만들기 = 독서 기록 만들기
