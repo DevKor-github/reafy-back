@@ -29,7 +29,8 @@ export class UserBookHistoryResDto {
   @IsNumber()
   duration: number;
 
-  static makeRes(data: UserBookHistory) {
+  static makeRes(data?: UserBookHistory) {
+    if (!data) return new UserBookHistoryResDto();
     const resData = new UserBookHistoryResDto();
     resData.userBookHistoryId = data.userBookHistoryId;
     resData.bookshelfBookId = data.bookshelfBookId;
