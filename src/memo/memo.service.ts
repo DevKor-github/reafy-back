@@ -56,7 +56,7 @@ export class MemoService {
         memo.createdAt = memo.created_at;
         memo.updatedAt = memo.updated_at;
         const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
-        return await MemoResDto.makeRes(memo, hashtags);
+        return MemoResDto.makeRes(memo, hashtags);
       }),
     );
     return memoList;

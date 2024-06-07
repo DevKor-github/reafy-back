@@ -22,7 +22,7 @@ export class MemoResDto {
   @ApiProperty()
   updatedAt: string;
 
-  static async makeRes(memoObject: Memo, hashtags: string[]) {
+  static makeRes(memoObject: Memo, hashtags: string[]) {
     const resData: MemoResDto = {
       memoId: memoObject.memoId,
       userId: memoObject.userId,
