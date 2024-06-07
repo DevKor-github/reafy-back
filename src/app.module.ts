@@ -31,7 +31,6 @@ import { QuestModule } from './quest/quest.module';
       autoLoadEntities: true, //자동으로 엔티티 load
       synchronize: true, //개발 중에만 쓰고, 실제 프로덕트에선 끄기
       logging: true, // 자동으로 쿼리문과 에러 로깅,
-      timezone: 'Asia/Seoul',
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', ''),

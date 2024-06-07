@@ -11,7 +11,7 @@ import { UserRepository } from 'src/user/repository/user.repository';
 import { UserBookHistoryReqDto } from './dtos/user-book-history-req.dto';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { toDate } from 'date-fns-tz';
+import { toDate, formatInTimeZone } from 'date-fns-tz';
 import { PaginatedUserBookHistoryRes } from './dtos/paginated-user-book-history-res.dto';
 import { HISTORY_LIST_TAKE } from 'src/common/constant/history.constant';
 
@@ -98,17 +98,16 @@ export class HistoryService {
     const userBookHistoryList: Record<string, UserBookHistoryResDto[]> = {};
 
     resultArray.forEach((history: UserBookHistory) => {
-      const createdAtInKST = toDate(history.createdAt, {
-        timeZone: 'Asia/Seoul',
-      });
-      const koFormat = format(createdAtInKST, 'yyyy년 M월 d일 EEEE', {
-        locale: ko,
-      });
+      const koFormat = formatInTimeZone(
+        history.createdAt,
+        'Asia/Seoul',
+        'yyyy년 M월 d일 EEEE',
+        { locale: ko },
+      );
 
       if (!userBookHistoryList[koFormat]) {
         userBookHistoryList[koFormat] = [];
       }
-
       userBookHistoryList[koFormat].push(
         UserBookHistoryResDto.makeRes(history),
       );

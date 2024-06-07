@@ -3,6 +3,7 @@ import { ko } from 'date-fns/locale';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber } from 'class-validator';
 import { UserBookHistory } from 'src/model/entity/UserBookHistory.entity';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export class UserBookHistoryResDto {
   @ApiProperty({ description: 'user_book_history_id' })
@@ -37,7 +38,12 @@ export class UserBookHistoryResDto {
     resData.startPage = data.startPage;
     resData.endPage = data.endPage;
     resData.duration = data.duration;
-    resData.createdAt = format(data.createdAt, 'aaaa h시 m분', { locale: ko });
+    resData.createdAt = formatInTimeZone(
+      data.createdAt,
+      'Asia/Seoul',
+      'aaaa h시 m분',
+      { locale: ko },
+    );
 
     return resData;
   }

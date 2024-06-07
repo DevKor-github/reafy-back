@@ -26,20 +26,18 @@ export class MemoService {
     userId: number,
     page: number,
   ): Promise<MemoResWithPagesDto> {
-    const memoList = [];
     const resultObject = await this.memoRepository.getMemoListById(
       userId,
       page,
     );
     const resultArray = resultObject.resultArray;
 
-    await Promise.all(
+    const memoList = await Promise.all(
       resultArray.map(async (memo) => {
         const hashtags = await this.getHashtagsByMemoId(memo.memoId);
-        memoList.push(await MemoResDto.makeRes(memo, hashtags));
+        return await MemoResDto.makeRes(memo, hashtags);
       }),
     );
-    memoList.sort((a, b) => b.createdAt - a.createdAt); //promise.all + map은 순서가 보장되지 않으므로 다시 sorting
 
     return MemoResWithPagesDto.makeRes(
       resultObject.totalResults,
@@ -50,8 +48,7 @@ export class MemoService {
   }
 
   async processMemoList(resultArray: any): Promise<MemoResDto[]> {
-    const memoList = [];
-    await Promise.all(
+    const memoList = await Promise.all(
       resultArray.map(async (memo) => {
         memo.userId = memo.user_id;
         memo.bookshelfBookId = memo.bookshelf_book_id;
@@ -59,10 +56,10 @@ export class MemoService {
         memo.createdAt = memo.created_at;
         memo.updatedAt = memo.updated_at;
         const hashtags = await this.getHashtagsByMemoId(memo.memo_id);
-        memoList.push(await MemoResDto.makeRes(memo, hashtags));
+        return await MemoResDto.makeRes(memo, hashtags);
       }),
     );
-    return memoList.sort((a, b) => b.createdAt - a.createdAt);
+    return memoList;
   }
 
   async getMemoListByHashtag(
