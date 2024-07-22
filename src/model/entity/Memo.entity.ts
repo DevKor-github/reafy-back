@@ -12,7 +12,7 @@ export class Memo extends BasicDate {
   @Column({ name: 'bookshelf_book_id' })
   bookshelfBookId: number;
 
-  @Column()
+  @Column({ length: 1000 })
   content: string;
 
   @Column()

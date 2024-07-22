@@ -1,1 +1,1 @@
-export const TIMER_DEFAULT_SECONDS = 1800;
+export const TIMER_DEFAULT_SECONDS = 900;
