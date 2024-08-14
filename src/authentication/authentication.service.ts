@@ -1,9 +1,4 @@
-
-import {
-  Inject,
-  Injectable,
-  LoggerService
-} from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { CoinService } from 'src/coin/coin.service';
@@ -24,15 +19,25 @@ import { LoginRequest } from './dto/LoginRequest.dto';
 import { TokenResponse } from './dto/TokenResponse.dto';
 import { ErrorCodeEnum } from 'src/common/exception/error-code/error.code';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import * as jwt from 'jsonwebtoken';
+import * as jwksClient from 'jwks-rsa';
 
 @Injectable()
 export class AuthenticationService {
+  private jwksClientInstance = jwksClient({
+    jwksUri: 'https://appleid.apple.com/auth/keys',
+    cache: true,
+    cacheMaxEntries: 4,
+    cacheMaxAge: 600000,
+  });
+
   constructor(
     private readonly userService: UserService,
     private readonly coinService: CoinService,
     private readonly jwtService: JwtService,
-    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService,
-  ) { }
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+  ) {}
 
   async login(data: LoginRequest, res): Promise<TokenResponse> {
     let oauthId;
@@ -41,8 +46,12 @@ export class AuthenticationService {
         oauthId = await this.getUserOauthIdByKakaoAccessToken(data.accessToken);
         break;
       }
+      case 'apple': {
+        oauthId = await this.getUserOauthIdByIosAccessToken(data.accessToken);
+        break;
+      }
       default: {
-        this.logger.error("invalid social login");
+        this.logger.error('invalid social login');
         throw VendorNotExistException(); //소셜로그인 선택 실패 예외처리
       }
     }
@@ -75,7 +84,11 @@ export class AuthenticationService {
         },
       });
     } catch (err) {
-      this.logger.error(`\n## Fail to get kakao user info , accessToken : ${accessToken}`, {}, err.stack);
+      this.logger.error(
+        `\n## Fail to get kakao user info , accessToken : ${accessToken}`,
+        {},
+        err.stack,
+      );
       if (err?.response?.data?.code === -401) throw BadAccessTokenException();
       throw InternalServerException();
     }
@@ -92,6 +105,67 @@ export class AuthenticationService {
       const createdUser: User = await this.userService.createUser({
         oauthId: kakaoId,
         vender: 'kakao',
+      });
+
+      this.coinService.createCoin(createdUser.userId);
+      return createdUser.oauthId;
+    }
+  }
+
+  private async getAppleSigningKey(kid: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.jwksClientInstance.getSigningKey(kid, (err, key) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        const signingKey = key.getPublicKey();
+        resolve(signingKey);
+      });
+    });
+  }
+
+  async getUserOauthIdByIosAccessToken(identityToken: string): Promise<string> {
+    // IOS LOGIN 회원조회 REST-API
+    const decodedIdentityToken = this.jwtService.decode(identityToken, {
+      complete: true,
+    });
+    const { kid } = decodedIdentityToken.header;
+
+    let publicKey;
+    try {
+      publicKey = await this.getAppleSigningKey(kid);
+    } catch (err) {
+      this.logger.error(`\n## Fail to get ios public key`, {}, err.stack);
+      if (err?.response?.data?.code === -401) throw BadAccessTokenException();
+      throw InternalServerException();
+    }
+    jwt.verify(
+      identityToken,
+      publicKey,
+      {
+        algorithms: ['RS256'],
+      },
+      (err) => {
+        if (!err) return;
+        this.logger.error(`\n## Fail to verify token`, {}, err.stack);
+        throw BadAccessTokenException();
+      },
+    );
+
+    //토큰 검증 됐을 시
+    const { email } = decodedIdentityToken.payload;
+    console.log(email);
+
+    try {
+      const oauthId = (await this.userService.findByOauthId(email))?.oauthId;
+      if (oauthId) return oauthId;
+    } catch (e) {
+      if (e.errorCode.errorCode != ErrorCodeEnum.USER_NOT_FOUND) throw e; //UserNotFound error가 아닐 경우 re-throw
+      // 회원이 없으면 회원가입 후 아이디 반환
+      const createdUser: User = await this.userService.createUser({
+        oauthId: email,
+        vender: 'apple',
       });
 
       this.coinService.createCoin(createdUser.userId);
@@ -123,8 +197,9 @@ export class AuthenticationService {
     const user = await this.userService.findByOauthId(id.toString());
 
     if (user.refreshToken !== refreshToken) {
-
-      this.logger.error(`\n## Invalid refreshToken , requsrt refreshToken : ${refreshToken}, user refreshToken : ${user.refreshToken}`);
+      this.logger.error(
+        `\n## Invalid refreshToken , requsrt refreshToken : ${refreshToken}, user refreshToken : ${user.refreshToken}`,
+      );
       throw InvalidRefreshTokenException();
     }
 
