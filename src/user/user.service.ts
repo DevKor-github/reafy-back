@@ -54,4 +54,10 @@ export class UserService {
       await this.userRepository.findOne({ where: { userId: userId } }),
     );
   }
+
+  async saveUserTimer(userId: number, timer: number) {
+    return UserTimerResDto.makeRes(
+      await this.userRepository.saveUserTimer(userId, timer),
+    );
+  }
 }

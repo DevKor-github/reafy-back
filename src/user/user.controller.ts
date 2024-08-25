@@ -1,7 +1,8 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Put, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -30,5 +31,31 @@ export class UserController {
   @Get('timer')
   async getUserTimer(@Req() req: Request): Promise<UserTimerResDto> {
     return await this.userService.getUserTimer(req.user.userId);
+  }
+
+  @ApiOperation({
+    summary: '유저 타이머 저장하기',
+    description: '유저의 남은 대나무 타이머 시간을 저장합니다. (초 단위)',
+  })
+  @ApiOkResponse({
+    description: '유저의 저장된 타이머',
+    type: UserTimerResDto,
+    isArray: false,
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        timer: { type: 'number' },
+      },
+      required: ['timer'],
+    },
+  })
+  @Put('timer')
+  async saveUserTimer(
+    @Req() req: Request,
+    @Body() body: { timer: number },
+  ): Promise<UserTimerResDto> {
+    return await this.userService.saveUserTimer(req.user.userId, body.timer);
   }
 }
