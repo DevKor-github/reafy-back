@@ -38,7 +38,7 @@ import { S3Client } from '@aws-sdk/client-s3';
           // contentType: multerS3.AUTO_CONTENT_TYPE,
           // acl: 'public-read',
           key: function (req, file, cb) {
-            cb(null, `images/${Date.now()}.jpg`);
+            cb(null, `reafy/images/${Date.now()}.jpg`);
           },
         }),
         limits: { fileSize: 5 * 1024 * 1024 },
