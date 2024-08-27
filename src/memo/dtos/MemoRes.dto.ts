@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Memo } from 'src/model/entity/Memo.entity';
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { format, formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
 export class MemoResDto {
   @ApiProperty()
@@ -31,16 +31,8 @@ export class MemoResDto {
       page: memoObject.page,
       imageURL: memoObject.imageURL,
       hashtag: hashtags,
-      createdAt: formatInTimeZone(
-        memoObject.createdAt,
-        'Asia/Seoul',
-        'yyyy.MM.dd HH:mm',
-      ),
-      updatedAt: formatInTimeZone(
-        memoObject.updatedAt,
-        'Asia/Seoul',
-        'yyyy.MM.dd HH:mm',
-      ),
+      createdAt: format(memoObject.createdAt, 'yyyy.MM.dd HH:mm'),
+      updatedAt: format(memoObject.updatedAt, 'yyyy.MM.dd HH:mm'),
     };
     return resData;
   } //각각의 객체에 대해서 파싱하고 Res Dto로 변환

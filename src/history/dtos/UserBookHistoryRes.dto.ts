@@ -38,12 +38,7 @@ export class UserBookHistoryResDto {
     resData.startPage = data.startPage;
     resData.endPage = data.endPage;
     resData.duration = data.duration;
-    resData.createdAt = formatInTimeZone(
-      data.createdAt,
-      'Asia/Seoul',
-      'aaaa h시 m분',
-      { locale: ko },
-    );
+    resData.createdAt = format(data.createdAt, 'aaaa h시 m분', { locale: ko });
 
     return resData;
   }
