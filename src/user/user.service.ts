@@ -37,6 +37,19 @@ export class UserService {
     return await this.userRepository.save(data);
   }
 
+  async deleteUser(userId: number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { userId: userId },
+    });
+
+    if (!user) {
+      this.logger.error(`## user is not exist userId : ${userId}`);
+      throw UserNotFoundException();
+    }
+
+    await this.userRepository.delete(userId);
+  }
+
   async findByOauthId(oauthId: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { oauthId: oauthId },

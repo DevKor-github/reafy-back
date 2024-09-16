@@ -1,8 +1,17 @@
-import { Body, Controller, Get, Put, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -57,5 +66,17 @@ export class UserController {
     @Body() body: { timer: number },
   ): Promise<UserTimerResDto> {
     return await this.userService.saveUserTimer(req.user.userId, body.timer);
+  }
+
+  @ApiOperation({
+    summary: '유저 정보 삭제',
+    description: '현재 유저 정보를 영구적으로 삭제합니다.',
+  })
+  @ApiOkResponse({
+    description: '유저 정보 삭제 성공. ',
+  })
+  @Delete('/me')
+  async deleteUser(@Req() req: Request): Promise<void> {
+    await this.userService.deleteUser(req.user.userId);
   }
 }
